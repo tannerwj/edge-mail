@@ -23,3 +23,5 @@ This model covers the deployed personal Workers and the release and recovery too
 - **Release authority can change real mail flow.** Keep the old receiver available through MX propagation. Verify the envelope at each service and restore the saved DNS record set. The disposable-domain rehearsal demonstrated that the first message after a DNS change can still reach the preceding provider.
 
 This public preview has no published independent security assessment. The independent review should cover OAuth consent and refresh rotation, recursive grant revocation, Dynamic Worker isolation, mailbox owner notifications, webhook signature verification, remote images, and whether erasure persists through restore. The executable verification and external observations are in [TESTING.md](TESTING.md) and [DEPLOY.md](DEPLOY.md).
+
+Report a suspected vulnerability with a [private security advisory](https://github.com/tannerwj/edge-mail/security/advisories/new). Use fictional messages in reproduction steps.

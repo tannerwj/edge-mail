@@ -75,3 +75,15 @@ pnpm backup:restore --apply --worker WORKER --snapshot SNAPSHOT
 The preview reads the deployed storage bindings and published manifest. Apply creates a dedicated database, bucket and scheduled recovery Worker. It copies the mail, reconciles newer receipts and deletion journals, rebuilds search, checks isolation, and removes the schedule. Repeating the command resumes that recovery point. The result includes the resource names and counts. The scratch copy consumes D1 and R2 storage and Worker and storage operations.
 
 When recovering from another account, choose the destination profile and replace `--worker WORKER` with `--bucket RESTORED-R2-BUCKET`. For a non-R2 backup, copy its complete contents and object metadata into a private R2 bucket first. Compare the latest deletion-sync time and retain the original wrapping secret separately. Verify mailbox ownership and a sample of threads and private envelopes before an intentional cutover. Live DNS and mail continue to use the original installation throughout the rehearsal.
+
+## Update a button installation
+
+Cloudflare creates a copy under your Git account. Add the public project as a remote in that copy, fetch it, and review the changelog and migrations before merging.
+
+```sh
+git remote add upstream https://github.com/tannerwj/edge-mail.git
+git fetch upstream
+git diff HEAD upstream/master -- migrations wrangler.jsonc package.json
+```
+
+Keep your copy’s Worker name, resource bindings, custom domains and Access settings when merging. Save the active Worker version and D1 Time Travel bookmark first. Pushing the reviewed change to the branch connected to Workers Builds runs the deploy command again. Check sign-in and receive a fictional message before treating the upgrade as complete.

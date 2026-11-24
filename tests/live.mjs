@@ -7,7 +7,12 @@ export async function checkLive({ browser, start, json, origin, box, privateBox,
   await start(email);
   const page = await browser.newPage();
   try {
+    const appSocket = page.waitForEvent("websocket", {
+      predicate: (socket) => new URL(socket.url()).pathname === "/api/live/" + box,
+    });
     await page.goto(origin + "/mailboxes/" + box + "/inbox");
+    await appSocket;
+    await page.getByRole("list", { name: "Conversations" }).getByRole("link").first().waitFor();
     const open = async (boxId) =>
       page.evaluate(async (id) => {
         const s = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/live/" + id);
