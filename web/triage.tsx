@@ -109,6 +109,7 @@ export function Actions({ box, message }: { box: Box; message: Detail }) {
         : api("mailboxes/" + box.id + "/messages/" + message.id, data),
     onSuccess: async () => {
       await Promise.all([
+        client.invalidateQueries({ queryKey: ["workspace"] }),
         client.invalidateQueries({ queryKey: ["inbox", box.id] }),
         client.invalidateQueries({ queryKey: ["unified-inbox"] }),
         client.invalidateQueries({ queryKey: ["message", box.id, message.id] }),

@@ -36,7 +36,7 @@ export function EmptyReader({ search }: { search: boolean }) {
         <Inbox size={35} strokeWidth={1.35} />
       </span>
       <h2>Select a conversation</h2>
-      <p>Choose a message from the list to read and reply.</p>
+      <p>Choose a message from the list to read it.</p>
       {localStorage.getItem("edge-mail-shortcuts") !== "off" && (
         <div className="reader-hints">
           <span>

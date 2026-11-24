@@ -68,7 +68,16 @@ export async function checkTriage({
   await page.reload();
   await page.getByRole("button", { name: "Star", exact: true }).click();
   await page.getByRole("button", { name: "Unstar", exact: true }).waitFor();
+  const unread = page.getByRole("navigation", { name: "Mailboxes" }).getByLabel("1 unread");
+  await unread.waitFor();
   await page.getByRole("button", { name: "Mark read", exact: true }).click();
+  await unread.waitFor({ state: "detached" });
+  await page.getByRole("button", { name: "Mark unread", exact: true }).click();
+  await unread.waitFor();
+  await page.getByRole("button", { name: "Select messages", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Select message Delivery question" }).check();
+  await page.getByRole("button", { name: "Mark selected read" }).click();
+  await unread.waitFor({ state: "detached" });
   await page.getByRole("button", { name: "Mark unread", exact: true }).waitFor();
   await page.getByText("Move or label", { exact: true }).click();
   await page.getByLabel("Label name").fill("Follow up");

@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.2 · Mailbox navigation and unread counts
+
+Owners and domain admins can open mailbox setup directly from an empty workspace. An unavailable mailbox bookmark offers a way back to accessible inboxes. Shared readers see their access level, empty searches offer a way back to mail, and unread counts update after individual and bulk changes.
+
 ## 0.2.1 · Feedback review
 
 The private feedback preview explains who can read a report. The maintainer’s authorized coding agents can read submitted reports to investigate fixes. Existing installations can use the same feedback channel without a migration.

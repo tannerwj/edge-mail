@@ -119,7 +119,10 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
       <section className="list" id="mail-conversations">
         <header>
           <div>
-            <small>{caption}</small>
+            <small>
+              {caption}
+              {!unified && box && !box.can_edit && " · Read-only mailbox"}
+            </small>
             <h1>{title}</h1>
           </div>
           <div className="list-toolbar">
@@ -147,7 +150,14 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
         {!q.data ? (
           <Status error={q.error} />
         ) : !messages.length ? (
-          <p className="empty">No messages yet.</p>
+          view.q && box ? (
+            <div className="empty">
+              <p>No messages match this search.</p>
+              <Link {...destination({ box: box.id })}>Clear search</Link>
+            </div>
+          ) : (
+            <p className="empty">No messages yet.</p>
+          )
         ) : (
           <ConversationList rows={messages} selected={selected}>
             {(m) => (
@@ -182,9 +192,9 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
       <section className="reader">
         {selected && box ? (
           <Reader box={box} id={selected} view={view} />
-        ) : (
+        ) : messages.length > 0 ? (
           <EmptyReader search={!unified} />
-        )}
+        ) : null}
       </section>
     </div>
   );

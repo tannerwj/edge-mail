@@ -38,6 +38,8 @@ export function BulkActions({
     onSuccess: async () => {
       selection.close();
       await Promise.all([
+        client.invalidateQueries({ queryKey: ["workspace"] }),
+        client.invalidateQueries({ queryKey: ["unified-inbox"] }),
         client.invalidateQueries({ queryKey: ["inbox", box] }),
         client.invalidateQueries({ queryKey: ["message", box] }),
       ]);

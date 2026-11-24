@@ -28,6 +28,7 @@ import { checkSnapshot } from "./snapshot.mjs";
 import { checkOutbox } from "./outbox.mjs";
 import { checkDrafts } from "./drafts.mjs";
 import { checkConversations } from "./conversations.mjs";
+import { addFirstDomain, checkSharedReader, addManagedMailbox } from "./mail-personas.mjs";
 import { checkTriage } from "./triage.mjs";
 import { checkLimits, checkHtml } from "./limits.mjs";
 import assert from "node:assert/strict";
@@ -210,7 +211,7 @@ try {
     assert.equal(probe.supplied_wire_id === null, path === "builder");
     assert.deepEqual(await json("/api/provider-probe", { path }), probe);
   }
-  const { id: domain } = await json("/api/domains", { name: "MAIL.test" });
+  const domain = await addFirstDomain(page);
   const { id: box } = await json("/api/mailboxes", {
     name: "Support",
     address: "support@mail.test",
@@ -273,15 +274,7 @@ try {
     (await request("/api/mailboxes/" + box + "/aliases", { address: "extra@mail.test" })).status,
     403,
   );
-  await page.goto(origin + "/mailboxes/" + box + "/inbox");
-  await page.getByRole("link", { name: /Delivery question/ }).click();
-  await page.getByText("Please confirm the delivery window.", { exact: true }).last().waitFor();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.reload();
-  await page.getByRole("heading", { name: "Delivery question" }).waitFor();
-  await page.locator(".reading-toolbar").getByRole("link", { name: "Inbox", exact: true }).click();
-  await page.getByRole("link", { name: /Delivery question/ }).waitFor();
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await checkSharedReader(page, origin, box, privateBox);
   await checkTriage({ json, request, start, list, detail, privateBox, page, origin, box });
   await checkConversations({ origin, list, json, page, box, root: message.id });
   await checkDrafts({ page, box, origin, root: message.id, json, start, request });
@@ -316,7 +309,8 @@ try {
   assert.equal((await request("/api/operations")).status, 403);
   assert.equal((await request(list)).status, 404);
   assert.equal((await json("/api/workspace")).managed.length, 2);
-  await json("/api/mailboxes", { name: "Returns", address: "returns@mail.test" });
+  await addManagedMailbox(page, origin);
+  assert.ok((await json("/api/workspace")).managed.some((m) => m.address === "returns@mail.test"));
   assert.equal((await request("/api/domains", { name: "blocked.test" })).status, 403);
   await start("box-owner@example.test");
   await json("/api/mailboxes/" + box + "/members", {

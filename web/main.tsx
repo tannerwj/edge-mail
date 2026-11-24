@@ -82,6 +82,31 @@ function Desk({ session }: { session: Session }) {
     </>
   );
 }
+function EmptyWorkspace({ space, unavailable }: { space: Workspace; unavailable: boolean }) {
+  const hasDomain = space.domains.length > 0;
+  const canSetUp = hasDomain || space.user.role !== "member";
+  return (
+    <section className="settings">
+      <h1>{unavailable ? "Mailbox unavailable" : "No mailboxes yet"}</h1>
+      {unavailable && space.mailboxes.length > 0 ? (
+        <Link to="/inboxes">Back to all inboxes</Link>
+      ) : canSetUp ? (
+        <>
+          <p>
+            {hasDomain
+              ? "Create a mailbox on a domain you manage."
+              : "Add a receiving domain, then create your first mailbox."}
+          </p>
+          <Link to="/settings/$section" params={{ section: "mailboxes" }}>
+            Set up a mailbox
+          </Link>
+        </>
+      ) : (
+        <p>Ask an owner to share a mailbox with you.</p>
+      )}
+    </section>
+  );
+}
 function MailWorkspace({
   session,
   space,
@@ -123,7 +148,7 @@ function MailWorkspace({
             <h1>Approvals</h1>
             <Approvals />
           </section>
-        ) : location.view === "unified" ? (
+        ) : location.view === "unified" && space.mailboxes.length > 0 ? (
           <Inbox key={location.domain || "all"} space={space} box={box} view={location} />
         ) : location.view === "settings" ? (
           <React.Suspense fallback={<p role="status">Opening settings…</p>}>
@@ -141,15 +166,7 @@ function MailWorkspace({
             view={location}
           />
         ) : (
-          <section className="settings">
-            <h1>{location.box ? "Mailbox unavailable" : "No mailboxes yet"}</h1>
-            <p>
-              {space.user.role === "member"
-                ? "Ask an owner to share a mailbox."
-                : "Add a receiving domain and mailbox to start collecting mail."}
-            </p>
-            {space.user.role !== "member" && <Link to="/settings">Open settings →</Link>}
-          </section>
+          <EmptyWorkspace space={space} unavailable={!!location.box} />
         )}
       </main>
     </div>

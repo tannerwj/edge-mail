@@ -13,6 +13,7 @@ export function useLive(box: string | undefined) {
       delay = 1000,
       stopped = false;
     const refresh = () => {
+      void client.invalidateQueries({ queryKey: ["workspace"] });
       void client.invalidateQueries({ queryKey: ["unified-inbox"] });
       for (const key of ["inbox", "message", "outbox"])
         void client.invalidateQueries({ queryKey: [key, box] });

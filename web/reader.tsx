@@ -36,6 +36,7 @@ export function Reader({ box, id, view }: { box: Box; id: string; view: MailView
                 ? view.folder[0].toUpperCase() + view.folder.slice(1)
                 : "Inbox"}
         </Link>
+        {!box.can_edit && <small>Read-only mailbox</small>}
         <Actions key={"actions:" + id} box={box} message={m} />
       </div>
       <div className="letter">
