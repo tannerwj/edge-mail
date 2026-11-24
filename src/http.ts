@@ -1,3 +1,4 @@
+import { projectFeedback } from "./project-feedback";
 import { discardAction, undoSubmission } from "./ops/compose-undo";
 import { transportPolicy } from "./transport-policy";
 import { standardMailboxes } from "./ops/standard-mailboxes";
@@ -257,6 +258,7 @@ async function mutate(env: Bindings, user: User, url: URL, data: Record<string, 
   if (area === "mailboxes" && box) return mailboxWrite(env, user, box, action, id, data);
   if (["approvals", "grants", "notifications", "limits", "suppressions", "searches"].includes(area))
     return accountWrite(env, user, url, data);
+  if (url.pathname === "/api/project-feedback") return projectFeedback(env, user.id, data);
   if (area === "notices") return noticeAction(env, user, url.pathname);
   if (url.pathname === "/api/provider-probe") return providerProbe(env, user, data.path);
   if (area === "domains") return mutateDomain(env, user, url, data);

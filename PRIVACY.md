@@ -11,3 +11,7 @@ The operator chooses which sending and forwarding workflows to enable and who ma
 ### Optional assistance
 
 When enabled by the installer and mailbox owner, an explicit assistance request shares a search description or excerpts of up to five messages with Cloudflare Workers AI. The application keeps a per-mailbox daily request count. Generated suggestions are displayed to the requesting person. Labels, rules or sent drafts require a separate user action.
+
+## Optional project feedback
+
+Sending a private report shares the reviewed category, summary, optional area and software version with the Edge Mail maintainer. The installation sends it to `edge-mail-feedback.tannerwj.dev` through its Worker using a report-specific receipt. The report excludes mailbox contents, account identifiers and the installation hostname unless you write them in the summary. Opening Feedback or reviewing a draft does not contact the maintainer. Checking for a reply uses the receipt. The maintainer stores reports and replies separately from mail. Browser history for reports stays on the device until you remove the receipt or clear site data. Operators can set the Worker variable `PROJECT_FEEDBACK` to `off` to disable private submissions and reply checks.

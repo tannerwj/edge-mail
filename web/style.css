@@ -1829,3 +1829,51 @@ a.queue-row:hover {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.project-feedback {
+  max-width: 42rem;
+}
+.project-feedback form,
+.project-feedback article {
+  display: grid;
+  gap: 0.75rem;
+}
+.feedback-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+.project-feedback label {
+  display: grid;
+  gap: 0.35rem;
+}
+.project-feedback textarea {
+  resize: vertical;
+}
+.feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.feedback-preview {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.45rem 1rem;
+}
+.feedback-preview dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.project-feedback article {
+  border-top: 1px solid var(--line);
+  padding-block: 1rem;
+}
+.project-feedback article strong,
+.project-feedback blockquote {
+  overflow-wrap: anywhere;
+}
+.project-feedback blockquote {
+  margin: 0;
+  white-space: pre-wrap;
+}

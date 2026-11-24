@@ -9,6 +9,7 @@ import {
   LogOut,
   MailOpen,
   Menu,
+  MessageSquare,
   Send,
   Settings,
   ShieldAlert,
@@ -140,6 +141,9 @@ export function Sidebar({ space, session, box, view }: Props) {
           )}
         </div>
         <footer>
+          <Link to="/settings/$section" params={{ section: "feedback" }}>
+            <MessageSquare size={16} /> Feedback
+          </Link>
           <Link to="/settings" aria-current={view.view === "settings" ? "page" : undefined}>
             <Settings size={16} />
             Settings

@@ -1,3 +1,4 @@
+import { feedbackService, exerciseFeedback } from "./project-feedback.mjs";
 import { exerciseList, publisher } from "./publisher.mjs";
 import { operatorService, exerciseOperatorService } from "./mail-provider-settings.mjs";
 import { hookReceiver, exerciseHooks } from "./webhooks.mjs";
@@ -27,6 +28,7 @@ const claims = {
   type: "app",
   exp: Math.floor(Date.now() / 1000) + 300,
 };
+const feedback = feedbackService();
 const receiver = pushReceiver();
 const images = imageService();
 const lists = publisher();
@@ -71,6 +73,8 @@ try {
       },
       outboundService: (request) => {
         const url = new URL(request.url);
+        if (url.href === "https://edge-mail-feedback.tannerwj.dev/v1/report")
+          return feedback.receive(request);
         if (url.origin === "https://api.cloudflare.com") return operator.receive(request);
         if (url.origin === "https://hooks.example.test") return hooks.receive(request);
         if (url.origin === "https://subscriptions.publisher.test") return lists.receive(request);
@@ -160,6 +164,20 @@ try {
   const ownerJWT = await new SignJWT({ ...claims, email: ownerEmail })
     .setProtectedHeader({ alg: "RS256", kid: jwk.kid })
     .sign(privateKey);
+  await db.prepare("INSERT INTO users(id,role) VALUES('feedback-member','member')").run();
+  await db
+    .prepare(
+      "INSERT INTO user_emails(email,user_id) VALUES('feedback-member@example.test','feedback-member')",
+    )
+    .run();
+  const memberJWT = await new SignJWT({
+    ...claims,
+    email: "feedback-member@example.test",
+    sub: "feedback-member",
+  })
+    .setProtectedHeader({ alg: "RS256", kid: jwk.kid })
+    .sign(privateKey);
+  await exerciseFeedback(worker, ownerJWT, memberJWT, feedback);
   await exercisePush(worker, ownerJWT, receiver, db);
   await exerciseImages(worker, ownerJWT, db, images);
   await exerciseList(worker, ownerJWT, db, lists);

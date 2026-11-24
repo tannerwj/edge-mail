@@ -1,3 +1,4 @@
+import { feedbackJourney } from "./project-feedback.mjs";
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -113,6 +114,7 @@ export async function checkDomainImport({ page, origin, request, json, start, st
   await updates.uncheck();
   assert.equal(await about.getByRole("link", { name: /Version v9.1.0/ }).count(), 0);
   await page.unroute("**/api/release-status");
+  await feedbackJourney(page);
   console.log(
     "PASS · instance owner imports two zones across a filtered list, retries safely, and delegated administrators cannot enumerate or import other domains",
   );

@@ -127,7 +127,7 @@ function MailWorkspace({
           <Inbox key={location.domain || "all"} space={space} box={box} view={location} />
         ) : location.view === "settings" ? (
           <React.Suspense fallback={<p role="status">Opening settings…</p>}>
-            <Settings space={space} section={location.section} />
+            <Settings email={session.email} space={space} section={location.section} />
           </React.Suspense>
         ) : box && (location.folder === "outbox" || location.folder === "scheduled") ? (
           <Outbox box={box} scheduled={location.folder === "scheduled"} />

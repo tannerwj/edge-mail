@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.0 · Private project feedback
+
+Downstream users can send reviewed reports from the inbox and check for a maintainer reply on the same device. No mailbox migration is required.
+
 ## 0.1.0 · Public preview
 
 ### Schema 0035 and compose

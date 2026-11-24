@@ -22,6 +22,7 @@ export interface Bindings extends WorkerBindings {
   CONTENT_ORIGIN?: string;
   EVENT_QUEUE?: string;
   EVENT_SENDER?: string;
+  PROJECT_FEEDBACK?: string;
   PROBE_MODE?: string;
   PROBE_RUN?: string;
   PROBE_FROM?: string;

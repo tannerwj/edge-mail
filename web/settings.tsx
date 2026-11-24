@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ChevronRight,
+  MessageSquare,
   Search,
   SlidersHorizontal,
   Inbox,
@@ -14,6 +15,7 @@ import {
 import { Form, type Field } from "./settings-form";
 import { MailboxQuota } from "./mailbox-quota";
 import { PersonErasure } from "./person-erasure";
+import { ProjectFeedback } from "./project-feedback";
 import { VersionSettings } from "./version";
 import { ReceivingAddresses, UnknownRecipients } from "./disposable";
 import { Approvals } from "./approvals";
@@ -129,7 +131,7 @@ function AccessSettings({ space }: Props) {
     </>
   );
 }
-function sections(space: Workspace) {
+function sections(space: Workspace, email: string) {
   const admin = space.user.role !== "member",
     owner = space.user.role === "owner",
     managed = !!space.managed.length;
@@ -229,6 +231,15 @@ function sections(space: Workspace) {
       ),
     },
     {
+      id: "feedback",
+      title: "Project feedback",
+      summary: "Report a problem, suggest an improvement or check a maintainer reply.",
+      keywords: "bug question support idea",
+      icon: MessageSquare,
+      show: true,
+      content: <ProjectFeedback key={email} email={email} />,
+    },
+    {
       id: "about",
       title: "About Edge Mail",
       summary: "Version, release updates and project feedback.",
@@ -239,10 +250,10 @@ function sections(space: Workspace) {
     },
   ].filter((s) => s.show);
 }
-export function Settings({ space, section }: { space: Workspace; section?: string }) {
+export function Settings({ space, section, email }: { space: Workspace; email: string; section?: string }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const pages = sections(space),
+  const pages = sections(space, email),
     current = pages.find((p) => p.id === section);
   if (section)
     return (

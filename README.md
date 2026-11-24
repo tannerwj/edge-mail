@@ -40,3 +40,7 @@ curl --request POST 'http://127.0.0.1:8787/cdn-cgi/local/email?from=customer%40o
 ## Project
 
 [Deployment and recovery](DEPLOY.md) · [Verification](TESTING.md) · [Architecture](ARCHITECTURE.md) · [Threat model](THREAT_MODEL.md) · [Privacy](PRIVACY.md) · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
+
+## Feedback
+
+Open **Feedback** in your installed sidebar to send a private report to the project maintainer and check for a reply. For public discussion, [open a GitHub issue](https://github.com/tannerwj/edge-mail/issues/new?template=feedback.yml).
