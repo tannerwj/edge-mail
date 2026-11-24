@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.4 · Multiple mailboxes
+
+Unread totals refresh across a multi-mailbox workspace. Settings forms protect the next entry while a save refreshes the workspace. Agents can undo read, star and label changes recorded by Cloudflare D1, including changes made before this release.
+
 ## 0.2.3 · First mailbox setup
 
 Opening a completed setup link now leads back to the inbox. The Deploy wizard describes each storage and queue binding. Domain import explains how to refresh a new installation by Worker name. Owners can create a mailbox directly on its domain setup page and preview routing for one selected address.

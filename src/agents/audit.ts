@@ -42,7 +42,7 @@ export function recordTriage(
     env.DB.prepare(
       selection +
         ` INSERT INTO triage_undo(audit_id,message_id,field,before_value,after_value) SELECT ?,m.id,?,${before},? FROM selected s JOIN messages m ON m.id=s.id`,
-    ).bind(...args, id, code, ...(label ? [value] : []), after),
+    ).bind(...args, id, code, ...(label ? [value] : []), String(after)),
   ];
 }
 export async function auditList(env: Bindings, c: Credential, box: string) {
@@ -66,7 +66,7 @@ export async function undoTriage(
  ${c ? "AND EXISTS(" + liveWrite + ")" : ""}), observed AS (SELECT e.*,CASE field WHEN 'folder' THEN m.folder WHEN 'is_read' THEN cast(m.is_read AS TEXT) WHEN 'starred' THEN cast(m.starred AS TEXT)
  ELSE cast(EXISTS(SELECT 1 FROM message_labels l WHERE l.message_id=m.id AND l.label=substr(field,7)) AS TEXT) END current
  FROM entries e LEFT JOIN messages m ON m.id=e.message_id AND m.mailbox_id=?),
- eligible AS (SELECT * FROM observed WHERE undone=0 AND NOT EXISTS(SELECT 1 FROM observed WHERE undone=0 AND current IS NOT after_value))`;
+ eligible AS (SELECT * FROM observed WHERE undone=0 AND NOT EXISTS(SELECT 1 FROM observed WHERE undone=0 AND current IS NOT CASE after_value WHEN '0.0' THEN '0' WHEN '1.0' THEN '1' ELSE after_value END))`;
   const args = [id, who.actor, who.user, box, ...(c ? guard(c, box) : []), box];
   const q = (sql: string) => env.DB.prepare(base + sql).bind(...args);
   const check = q(

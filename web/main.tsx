@@ -55,6 +55,7 @@ function Desk({ session }: { session: Session }) {
   const { entry, location, legacySearch } = useMailLocation();
   const q = useQuery({
     queryKey: ["workspace"],
+    refetchInterval: (query) => ((query.state.data?.mailboxes.length ?? 0) > 1 ? 15000 : false),
     queryFn: () => api("workspace").then((v) => spaceSchema.parse(v)),
   });
   const space = q.data;

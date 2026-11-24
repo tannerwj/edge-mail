@@ -168,6 +168,21 @@ export async function checkAgents({ page, origin, start, box, privateBox, root, 
     sql("SELECT count(*) n FROM messages WHERE id LIKE '02%' AND folder='inbox'")[0].n,
     200,
   );
+  // Cloud D1 stored bound numeric booleans as decimal text in older audit entries.
+  const star = await read(raw, "message_triage", {
+    mailbox: box,
+    ids: [ids[0]],
+    field: "starred",
+    value: true,
+  });
+  assert.equal(
+    sql("SELECT after_value FROM triage_undo WHERE audit_id='" + star.audit_id + "'")[0]
+      .after_value,
+    "1",
+  );
+  sql("UPDATE triage_undo SET after_value='1.0' WHERE audit_id='" + star.audit_id + "'");
+  assert.equal((await read(raw, "audit_undo", { mailbox: box, id: star.audit_id })).matched, 1);
+  assert.equal(sql("SELECT starred FROM messages WHERE id='" + ids[0] + "'")[0].starred, 0);
   const bytes = Buffer.from("Fictional pickup note."),
     sha = createHash("sha256").update(bytes).digest("hex");
   const argsUpload = { mailbox: box, name: "pickup.txt", size: bytes.length, sha256: sha };
