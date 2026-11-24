@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { activeBindings, api, cf } from "./cloud-cli.mjs";
 
-const [mode, worker = "edge-mail", ...extra] = process.argv.slice(2);
+const [mode, worker, ...extra] = process.argv.slice(2);
 assert.ok(
-  ["--check", "--apply"].includes(mode) && !extra.length && /^[a-z0-9-]+$/.test(worker),
+  ["--check", "--apply"].includes(mode) && !extra.length && /^[a-z0-9-]+$/.test(worker || ""),
   "Use pnpm domains:sync --check or --apply, followed by the installed Worker name",
 );
 const identity = api("auth", "whoami");

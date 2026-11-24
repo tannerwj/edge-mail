@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as z from "zod/mini";
-import { api } from "./api";
+import { Form } from "./settings-form";
+import { api, type Workspace } from "./api";
 const result = z.object({
   domain: z.string(),
   apex: z.optional(z.boolean()),
@@ -23,9 +24,11 @@ const instructions = {
 };
 export function DomainSetup({
   domains,
+  mailboxes,
   expanded = false,
 }: {
   domains: { id: string; name: string }[];
+  mailboxes: Workspace["managed"];
   expanded?: boolean;
 }) {
   const [open, setOpen] = useState(expanded),
@@ -63,6 +66,18 @@ export function DomainSetup({
           ))}
         </select>
       </label>
+      {expanded && domains[0] && (
+        <Form
+          title="Create a mailbox"
+          fields={[
+            { key: "name", label: "Display name" },
+            { key: "local", label: "Address before @" + domains[0].name },
+          ]}
+          submit={({ name, local }) =>
+            api("mailboxes", { name, address: local.trim() + "@" + domains[0].name })
+          }
+        />
+      )}
       <p>
         Create postmaster, abuse and DMARC mailboxes for this domain. Existing addresses keep their
         delivery and membership settings.
@@ -91,14 +106,12 @@ export function DomainSetup({
           )}
           <p>{instructions[report.data.state]}</p>
           {report.data.worker && ["cloudflare", "unused"].includes(report.data.state) && (
-            <p>
-              After creating your addresses, preview their routing with{" "}
-              <code>
-                pnpm domain:connect --check {report.data.domain} {report.data.worker}
-                {report.data.apex ? " --catch-all" : ""}
-              </code>
-              . Use <code>--apply</code> to connect the previewed addresses.
-            </p>
+            <RecipientRoute
+              key={id}
+              domain={report.data.domain}
+              worker={report.data.worker}
+              mailboxes={mailboxes.filter((b) => b.domain_id === id)}
+            />
           )}
           <dl>
             {(["mx", "spf", "dmarc"] as const).map((k) => (
@@ -126,5 +139,40 @@ export function DomainSetup({
         Refresh DNS
       </button>
     </details>
+  );
+}
+
+function RecipientRoute({
+  domain,
+  worker,
+  mailboxes,
+}: {
+  domain: string;
+  worker: string;
+  mailboxes: Workspace["managed"];
+}) {
+  const [selected, setSelected] = useState("");
+  const address = mailboxes.find((b) => b.address === selected)?.address || mailboxes[0]?.address;
+  if (!address) return <p>Create a mailbox to see its receiving route.</p>;
+  const argument = "'" + address.replaceAll("'", "'\\''") + "'";
+  return (
+    <>
+      <label>
+        Address to connect
+        <select value={address} onChange={(e) => setSelected(e.target.value)}>
+          {mailboxes.map((b) => (
+            <option key={b.id}>{b.address}</option>
+          ))}
+        </select>
+      </label>
+      <p>Preview routing for this address from your installation checkout.</p>
+      <code>
+        pnpm domain:connect --check {domain} {worker} --only {argument}
+      </code>
+      <p>
+        Review the DNS and rule changes, then replace <code>--check</code> with <code>--apply</code>{" "}
+        to connect it.
+      </p>
+    </>
   );
 }

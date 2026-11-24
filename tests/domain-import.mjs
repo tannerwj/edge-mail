@@ -21,7 +21,7 @@ export async function checkDomainImport({ page, origin, request, json, start, st
   await page.getByLabel("Reading layout").waitFor();
   await sectionNav.getByRole("link", { name: "Mailboxes & domains" }).click();
   await page.getByText("Import Cloudflare domains", { exact: true }).click();
-  await page.getByText(/in your installation checkout/).waitFor();
+  await page.getByText("pnpm domains:sync --apply YOUR_WORKER", { exact: true }).waitFor();
   const zones = [
     { id: "registered", name: "mail.test" },
     { id: "shipping", name: "shipping.test" },
@@ -29,7 +29,10 @@ export async function checkDomainImport({ page, origin, request, json, start, st
     { id: "unselected", name: "spare.test" },
   ];
   const path = join(state, "catalog.json");
-  await writeFile(path, JSON.stringify({ zones, updated: "2026-10-01T00:00:00Z" }));
+  await writeFile(
+    path,
+    JSON.stringify({ zones, worker: "buddy-install", updated: "2026-10-01T00:00:00Z" }),
+  );
   wrangler([
     "r2",
     "object",
@@ -41,8 +44,8 @@ export async function checkDomainImport({ page, origin, request, json, start, st
     "--file",
     path,
   ]);
-  await page.reload();
-  await page.getByText("Import Cloudflare domains", { exact: true }).click();
+  await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+  await page.getByRole("checkbox", { name: /mail.test/ }).waitFor();
   assert.ok(await page.getByRole("checkbox", { name: /mail.test/ }).isDisabled());
   await page.getByRole("checkbox", { name: "shipping.test" }).check();
   await page.getByLabel("Find a domain").fill("bill");
@@ -63,6 +66,17 @@ export async function checkDomainImport({ page, origin, request, json, start, st
     "dmarc@billing.test",
     "postmaster@billing.test",
   ]);
+  await page.getByLabel("Display name", { exact: true }).fill("Orders");
+  await page.getByLabel("Address before @billing.test").fill("orders");
+  await page.getByRole("button", { name: "Create a mailbox", exact: true }).click();
+  await page.getByText("Saved", { exact: true }).waitFor();
+  await page.getByLabel("Address to connect").selectOption("orders@billing.test");
+  await page
+    .getByText(
+      "pnpm domain:connect --check billing.test buddy-install --only 'orders@billing.test'",
+      { exact: true },
+    )
+    .waitFor();
   const available = await json("/api/domains/available");
   assert.deepEqual(
     available.zones

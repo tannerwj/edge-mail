@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.3 · First mailbox setup
+
+The Deploy wizard describes each storage and queue binding. Domain import explains how to refresh a new installation by Worker name. Owners can create a mailbox directly on its domain setup page and preview routing for one selected address.
+
 ## 0.2.2 · Mailbox navigation and unread counts
 
 Owners and domain admins can open mailbox setup directly from an empty workspace. An unavailable mailbox bookmark offers a way back to accessible inboxes. Shared readers see their access level, empty searches offer a way back to mail, and unread counts update after individual and bulk changes.

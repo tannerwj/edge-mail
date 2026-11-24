@@ -1,6 +1,6 @@
 {
   "name": "edge-mail",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -88,6 +88,27 @@
     "bindings": {
       "SETUP_TOKEN": {
         "description": "A private random setup token of at least 32 bytes. Enter it once behind Access to create the first owner."
+      },
+      "OAUTH_KV": {
+        "description": "Create a new KV namespace for this installation’s OAuth grants."
+      },
+      "DB": {
+        "description": "Create a new D1 database for this inbox. The deploy command applies mailbox migrations here."
+      },
+      "MAIL": {
+        "description": "Create a new private R2 bucket for messages, attachments and backups."
+      },
+      "INGEST": {
+        "description": "Create a new queue for incoming mail, for example my-inbox-ingest."
+      },
+      "INGEST_DLQ": {
+        "description": "Create a separate queue for failed incoming mail, for example my-inbox-ingest-dlq."
+      },
+      "DELIVERY_EVENTS": {
+        "description": "Create a new queue for delivery updates, for example my-inbox-events."
+      },
+      "EVENTS_DLQ": {
+        "description": "Create a separate queue for failed delivery updates, for example my-inbox-events-dlq."
       }
     }
   }

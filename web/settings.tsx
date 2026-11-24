@@ -57,7 +57,7 @@ function MailboxSettings({ space }: Props) {
   return (
     <>
       {admin && <DomainImport />}
-      {!!space.domains.length && <DomainSetup domains={space.domains} />}
+      {!!space.domains.length && <DomainSetup domains={space.domains} mailboxes={space.managed} />}
       <ReceivingAddresses space={space} />
       <UnknownRecipients space={space} />
       <div className="forms">

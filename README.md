@@ -8,7 +8,7 @@ A self-hosted inbox for the domains you own on Cloudflare. Read mail from all yo
 
 You need an active Cloudflare domain, Zero Trust with a working sign-in method, Workers and enabled R2 and Queues. Check your plan for Worker Loaders. Mail storage, queue operations, Worker execution and optional outbound sending use your account’s allowances.
 
-1. Open **Deploy to Cloudflare**, select your personal account, and choose fresh names for the Worker and its resources. Save a random setup token of at least 32 bytes in your password manager and enter it as `SETUP_TOKEN`.
+1. Open **Deploy to Cloudflare**, sign in, and select your personal account. If sign-in takes you to the account home, open the Deploy button again. Choose fresh names for the Worker and its resources. Save a random setup token of at least 32 bytes in your password manager and enter it as `SETUP_TOKEN`.
 2. Connect your app hostname and configure an owner-only Access policy. Open `/setup` on that hostname, sign in, and enter your token to claim the first owner account. The [installation guide](DEPLOY.md#deploy-button) walks through the dashboard settings. It also includes a [guided CLI install](DEPLOY.md#guided-cli) that configures Access and both hostnames for you.
 3. Import the domains you want, create your first address, and connect its receiving route. Start with one unused address. Domain import alone leaves your current mail delivery in place. [Connect a domain](DEPLOY.md#connect-a-domain)
 

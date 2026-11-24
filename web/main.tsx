@@ -137,6 +137,7 @@ function MailWorkspace({
               <DomainSetup
                 key={location.domain}
                 domains={space.domains.filter((d) => d.id === location.domain)}
+                mailboxes={space.managed}
                 expanded
               />
             ) : (

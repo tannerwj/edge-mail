@@ -53,8 +53,11 @@ function DomainPicker() {
   if (!query.data.version)
     return (
       <p>
-        Run <code>pnpm domains:sync --apply</code> in your installation checkout to load active
-        zones from Cloudflare.
+        In your installation checkout, run <code>pnpm domains:sync --apply YOUR_WORKER</code> using
+        the Worker name you chose when deploying. Then refresh this list.
+        <button className="quiet" onClick={() => void query.refetch()}>
+          Refresh list
+        </button>
       </p>
     );
   const shown = query.data.zones.filter((zone) => zone.name.includes(filter.trim().toLowerCase()));
