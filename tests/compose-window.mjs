@@ -61,9 +61,9 @@ export async function checkComposeWindow(page, origin, box) {
       await tab.waitFor();
     } finally {
       pendingSave.resolve();
-      await page.unroute(path);
     }
     await saved;
+    await page.unroute(path);
     await page.reload();
     await tab.waitFor();
     assert.equal(await dialog.count(), 0);
