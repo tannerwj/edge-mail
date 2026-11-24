@@ -27,6 +27,7 @@
     "backup:restore": "node scripts/backup-restore.mjs",
     "backup:copy": "node scripts/backup-copy.mjs",
     "domains:sync": "node scripts/domain-catalog.mjs",
+    "install:finish": "node scripts/finish-install.mjs",
     "cloud:install": "node scripts/cloud-install.mjs",
     "access:member": "node scripts/access-members.mjs",
     "domain:connect": "node scripts/domain-connect.mjs",

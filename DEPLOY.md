@@ -2,14 +2,41 @@
 
 ## Deploy button
 
-1. [Deploy your own copy](https://deploy.workers.cloudflare.com/?url=https://github.com/tannerwj/edge-mail). Connect your Git provider and choose a fresh Worker, D1, KV, R2 and queue names. Use Node 24. Use a password manager to generate and store the setup token (32 random bytes or more). The deploy command applies migrations to the selected D1 binding. Save your fork for upgrades.
+1. [Deploy your own copy](https://deploy.workers.cloudflare.com/?url=https://github.com/tannerwj/edge-mail). Connect your Git provider and choose a fresh Worker, D1, KV, R2 and queue names. In build settings select Node 24 and set the deploy command to `pnpm run deploy` so every release applies its database migrations. Use a password manager to generate and store the setup token (32 random bytes or more). The deploy command applies migrations to the selected D1 binding. Save your fork for upgrades.
 2. In Zero Trust, open **Access controls → Applications** and add a self-hosted application for the exact hostname you will use, such as `mail.example.com`. Add an Allow policy listing your owner email. Copy the application audience (AUD) and your Zero Trust team domain (such as `your-team.cloudflareaccess.com`).
 3. In the new Worker’s **Settings → Domains & Routes**, add custom domains for the app and its sibling content host (such as `mail-content.example.com`). Scope the Access application to the app hostname. The separate content origin checks signed links for message bodies and attachments.
 4. In **Settings → Variables and Secrets**, add text bindings `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, and `CONTENT_ORIGIN` (the full HTTPS content origin). Deploy the changes. Keep the setup token as an encrypted secret. Put your custom domains and non-secret variables in your fork’s Wrangler configuration for future deployments.
 5. Visit the app hostname at `/setup`. Sign in and enter the saved token. Setup closes after creating the first owner. Open the app in a signed-out window to confirm it requires sign-in.
-6. Add a domain manually in **Settings → Mailboxes & domains**, or authenticate the project CLI in your fork and refresh the list using `pnpm domains:sync --check WORKER` followed by `--apply WORKER`. Select **Import Cloudflare domains**, choose domains, and create a mailbox. Connect its receiving route below. Outbound mail needs a verified sender and a send binding. See the [mailbox guide](docs/USING.md#enable-sending-during-installation).
+6. To populate **Import Cloudflare domains**, run the following in the copy Cloudflare created. The first command previews the changes. Apply configures the public installation and OAuth paths, applies 35-day locks to the raw, Sent, snapshot and deletion prefixes, and verifies the installation before you receive mail.
 
-For a minimum-retention requirement, configure locks on the R2 raw, Sent and snapshot prefixes before receiving mail. To enable installation artwork, offline reading or external OAuth clients under Access, configure the path-scoped application described by `scripts/release/install.mjs`. The guided CLI applies these settings automatically.
+   ```sh
+   pnpm install --frozen-lockfile
+   pnpm exec cf auth login
+   pnpm exec cf auth whoami
+   pnpm install:finish --check WORKER
+   pnpm install:finish --apply WORKER
+   ```
+
+7. Under **Settings → Mailboxes & domains**, select **Import Cloudflare domains**, choose domains and create your first mailbox. You can also add a domain manually. Connect its receiving route below. To refresh the domain list later use `pnpm domains:sync --apply WORKER`.
+
+### Enable outbound mail on a button installation
+
+In the Cloudflare Email Sending dashboard, verify a dedicated sending subdomain and its requested DNS records. In your fork’s `wrangler.jsonc`, add a sender binding and merge the following fields into the existing variables. Replace both sample addresses and use the name of your actual event queue.
+
+```jsonc
+"send_email": [
+  { "name": "OUTBOUND", "allowed_sender_addresses": ["receipts@dispatch.example.com"] }
+],
+"vars": {
+  "SEND_MODE": "cloudflare",
+  "SEND_FROM": "receipts@dispatch.example.com",
+  "SEND_MAILBOX": "support@example.com",
+  "EVENT_SENDER": "receipts@dispatch.example.com",
+  "EVENT_QUEUE": "edge-mail-events"
+}
+```
+
+Keep the Access and content-origin variables in place. Deploy from your fork and subscribe the dedicated sending domain’s delivery events to this Worker’s event queue in Cloudflare. Send a message to an address you control and check the envelope and Sent copy. See the [mailbox guide](docs/USING.md#enable-sending-during-installation) for the corresponding guided installer options.
 
 ## Guided CLI
 
