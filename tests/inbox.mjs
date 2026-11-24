@@ -199,6 +199,10 @@ try {
   await page.getByRole("button", { name: "Create owner" }).click();
   await page.getByRole("heading", { name: "No mailboxes yet" }).waitFor();
   assert.equal((await request("/api/setup", { token })).status, 410);
+  const completed = await page.goto(origin + "/setup");
+  assert.equal(completed.status(), 410);
+  await page.getByRole("link", { name: "Open your inbox" }).click();
+  await page.getByRole("heading", { name: "No mailboxes yet" }).waitFor();
   const foreign = await fetch(origin + "/api/domains", {
     method: "POST",
     headers: { Origin: "https://other.test", "Content-Type": "application/json" },

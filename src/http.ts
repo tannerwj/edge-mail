@@ -354,15 +354,17 @@ const protocolPaths = new Set([
   "/oauth/register",
   "/oauth/token",
 ]);
-function problemResponse(req: Request, env: Bindings, message: string, status: number) {
-  const setupHelp =
-    message === "Access not configured" &&
-    req.method === "GET" &&
-    ["/", "/app", "/setup"].includes(new URL(req.url).pathname) &&
-    req.headers.get("Accept")?.includes("text/html");
-  return setupHelp
-    ? env.ASSETS.fetch(new URL("/install/connect.html", req.url))
-    : Response.json({ error: message }, { status });
+async function problemResponse(req: Request, env: Bindings, message: string, status: number) {
+  const path = new URL(req.url).pathname;
+  if (req.method === "GET" && req.headers.get("Accept")?.includes("text/html")) {
+    if (message === "Access not configured" && ["/", "/app", "/setup"].includes(path))
+      return env.ASSETS.fetch(new URL("/install/connect.html", req.url));
+    if (path === "/setup" && status === 410) {
+      const page = await env.ASSETS.fetch(new URL("/install/complete", req.url));
+      return new Response(page.body, { status, headers: page.headers });
+    }
+  }
+  return Response.json({ error: message }, { status });
 }
 export async function http(
   req: Request,

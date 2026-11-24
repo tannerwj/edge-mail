@@ -2,7 +2,7 @@
 
 ## 0.2.3 · First mailbox setup
 
-The Deploy wizard describes each storage and queue binding. Domain import explains how to refresh a new installation by Worker name. Owners can create a mailbox directly on its domain setup page and preview routing for one selected address.
+Opening a completed setup link now leads back to the inbox. The Deploy wizard describes each storage and queue binding. Domain import explains how to refresh a new installation by Worker name. Owners can create a mailbox directly on its domain setup page and preview routing for one selected address.
 
 ## 0.2.2 · Mailbox navigation and unread counts
 
