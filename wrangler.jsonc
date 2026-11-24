@@ -38,7 +38,14 @@
     { "tag": "live-v1", "new_sqlite_classes": ["MailboxLive"] },
   ],
   "queues": {
-    "producers": [{ "binding": "INGEST", "queue": "edge-mail-ingest" }],
+    // The deploy button provisions bound queues. Declare the consumer-only and
+    // dead-letter queues too so a first installation can create every trigger.
+    "producers": [
+      { "binding": "INGEST", "queue": "edge-mail-ingest" },
+      { "binding": "INGEST_DLQ", "queue": "edge-mail-ingest-dlq" },
+      { "binding": "DELIVERY_EVENTS", "queue": "edge-mail-events" },
+      { "binding": "EVENTS_DLQ", "queue": "edge-mail-events-dlq" },
+    ],
     "consumers": [
       {
         "queue": "edge-mail-ingest",
