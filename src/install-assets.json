@@ -1,0 +1,11 @@
+{
+  "manifest": "/install/manifest.webmanifest",
+  "icons": ["/install/icon-192.png", "/install/icon-512.png"],
+  "reader": {
+    "/offline-worker.js": "javascript",
+    "/offline/reader": "text/html",
+    "/offline/reader.css": "text/css",
+    "/offline/reader.js": "javascript",
+    "/offline/device.js": "javascript"
+  }
+}

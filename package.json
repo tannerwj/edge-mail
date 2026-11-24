@@ -1,0 +1,93 @@
+{
+  "name": "edge-mail",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "vite build --config web/vite.config.ts --outDir dist/client --emptyOutDir",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web",
+    "db:check": "node scripts/check-schema.mjs",
+    "db:local": "wrangler d1 migrations apply DB --local",
+    "dev": "pnpm build && pnpm db:local && node scripts/dev.mjs",
+    "test:e2e": "node tests/list-unsubscribe.mjs && node tests/dmarc.mjs && node tests/rich-text.mjs && node tests/mbox.mjs && node tests/spam-classifier.mjs && node tests/rule-matcher.mjs && node --experimental-transform-types tests/address.mjs && node tests/search.mjs && node tests/threading.mjs && pnpm build && node tests/inbox.mjs && node tests/access.mjs && node tests/retention.mjs",
+    "deploy:check": "node scripts/check-release.mjs && pnpm db:check && pnpm check && pnpm types:check && pnpm build && wrangler deploy --dry-run",
+    "deploy": "node scripts/check-release.mjs && pnpm build && wrangler deploy --dry-run && wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "lint": "oxlint --type-aware",
+    "fmt": "abacus fmt",
+    "abc": "abacus abc",
+    "size": "abacus size",
+    "secrets": "abacus secrets",
+    "check": "abacus check",
+    "types:check": "wrangler types src/bindings.d.ts --env-interface WorkerBindings --include-runtime=false --include-main-module=false --check",
+    "staging:check": "cf deploy --dry-run --mode staging",
+    "domain:transport": "node scripts/domain-transport.mjs",
+    "domain:check": "node scripts/domain-check.mjs",
+    "test:backup": "node tests/off-account-copy.mjs",
+    "backup:restore": "node scripts/backup-restore.mjs",
+    "backup:copy": "node scripts/backup-copy.mjs",
+    "domains:sync": "node scripts/domain-catalog.mjs",
+    "cloud:install": "node scripts/cloud-install.mjs",
+    "access:member": "node scripts/access-members.mjs",
+    "domain:connect": "node scripts/domain-connect.mjs",
+    "destination:verify": "node scripts/verify-destination.mjs"
+  },
+  "dependencies": {
+    "@block65/webcrypto-web-push": "2.0.0",
+    "@cloudflare/workers-oauth-provider": "1.2.4",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@tanstack/react-query": "^5.108.3",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/virtual-core": "3.19.13",
+    "@tiptap/core": "3.35.0",
+    "@tiptap/pm": "3.35.0",
+    "fflate": "0.8.3",
+    "html-to-text": "^10.0.1",
+    "ical.js": "2.2.1",
+    "ipaddr.js": "2.5.0",
+    "jose": "^6.2.18",
+    "lucide-react": "1.78.0",
+    "postal-mime": "^4.2.1",
+    "re2js": "2.10.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sanitize-html": "2.18.2",
+    "saxes": "6.0.0",
+    "ulid": "^3.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "2.0.0-rc.3",
+    "@cloudflare/workers-types": "^5.20261123.1",
+    "@hegeldev/hegel": "0.6.1",
+    "@tailwindcss/vite": "4.3.5",
+    "@tjohnson/abacus": "github:tannerwj/abacus#525c860a88edd7eb6852abc0936ca6fc104bb1b2",
+    "@types/html-to-text": "^9.0.4",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/sanitize-html": "2.16.2",
+    "cf": "1.0.0-rc.2",
+    "http_ece": "1.2.1",
+    "miniflare": "5.20261119.0-beta",
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
+    "oxlint-tsgolint": "^7.0.2008",
+    "playwright": "^1.65.1",
+    "tailwindcss": "4.3.5",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.8",
+    "wrangler": "^4.166.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "cloudflare": {
+    "bindings": {
+      "SETUP_TOKEN": {
+        "description": "A private random setup token of at least 32 bytes. Enter it once behind Access to create the first owner."
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+name: Edge Mail feedback
+description: Share a problem or suggestion about your installation
+body:
+  - type: markdown
+    attributes:
+      value: Use fictional examples. Keep message contents, addresses, tokens, signed links and private deployment details out of this form.
+  - type: input
+    id: version
+    attributes:
+      label: Installed version
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true

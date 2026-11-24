@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  workerd: true
+  "@tjohnson/abacus": false
+  "@b12k/gitleaks": true
+  koffi: true

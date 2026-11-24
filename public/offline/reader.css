@@ -1,0 +1,37 @@
+:root {
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  background: #f6f7fb;
+  color: #222737;
+}
+main {
+  max-width: 46rem;
+  margin: 3rem auto;
+  padding: 0 1.25rem;
+}
+header {
+  font-weight: 700;
+}
+h1 {
+  font-size: 2rem;
+}
+details {
+  border-top: 1px solid #dce0eb;
+  padding: 1rem 0;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+small {
+  display: block;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+#status {
+  color: #586176;
+}

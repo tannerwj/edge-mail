@@ -1,0 +1,21 @@
+name: Verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  inbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: pnpm/action-setup@f53f5227a9e83886ab598c617f3c170fab62f0d3
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm deploy:check
+      - run: pnpm test:e2e
+      - run: pnpm staging:check
+      - run: pnpm size

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/worker.ts",
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/*.e2e.{ts,tsx,js,mjs}",
+    "*.config.{ts,js,mjs}",
+    ".dependency-cruiser.{js,cjs,mjs}",
+    "scripts/**/*.{ts,js,mjs}",
+    "staging/{id-probe,restore-worker,smtp-worker,worker}.ts",
+    "tests/{fault-worker,relay-boundary,retention-worker}.ts",
+    "public/offline-worker.js",
+    "public/offline/{device.js,reader.js,reader.css}"
+  ],
+  "ignore": ["dist/**", ".next/**", ".open-next/**", ".wrangler/**"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreBinaries": ["agent-secret", "rclone"],
+  "paths": {
+    "/offline/*": ["./public/offline/*"]
+  }
+}

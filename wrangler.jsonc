@@ -1,0 +1,64 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "edge-mail",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-23",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "upload_source_maps": true,
+  "minify": true,
+  "observability": {
+    "enabled": true,
+    "logs": { "invocation_logs": false },
+    "traces": { "enabled": false },
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "dist/client",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application",
+  },
+  "secrets": { "required": ["SETUP_TOKEN"] },
+  "define": { "LOCAL_IDENTITY_ENABLED": "false" },
+  "keep_vars": true,
+  "kv_namespaces": [{ "binding": "OAUTH_KV" }],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "edge-mail", "migrations_dir": "migrations" },
+  ],
+  "r2_buckets": [{ "binding": "MAIL", "bucket_name": "edge-mail-receipts" }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "OUTBOX_CLOCK", "class_name": "OutboxClock" },
+      { "name": "LIVE", "class_name": "MailboxLive" },
+    ],
+  },
+  "migrations": [
+    { "tag": "outbox-v1", "new_sqlite_classes": ["OutboxClock"] },
+    { "tag": "live-v1", "new_sqlite_classes": ["MailboxLive"] },
+  ],
+  "queues": {
+    "producers": [{ "binding": "INGEST", "queue": "edge-mail-ingest" }],
+    "consumers": [
+      {
+        "queue": "edge-mail-ingest",
+        "max_batch_size": 1,
+        "max_batch_timeout": 1,
+        "max_retries": 3,
+        "dead_letter_queue": "edge-mail-ingest-dlq",
+      },
+      {
+        "queue": "edge-mail-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "max_retries": 5,
+        "dead_letter_queue": "edge-mail-events-dlq",
+      },
+    ],
+  },
+  "worker_loaders": [{ "binding":"LOADER" }],
+  "ratelimits": [
+    { "name": "SETUP_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
+}

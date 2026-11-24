@@ -1,0 +1,8 @@
+Authentication-Results: mx.cloudflare.net; spf=pass; dkim=pass; dmarc=pass
+From: Customer <customer@outside.test>
+To: undisclosed-recipients:;
+Message-ID: <delivery-window@example.test>
+Subject: Delivery window
+Content-Type: text/plain; charset=UTF-8
+
+Could you confirm the delivery window for my order?

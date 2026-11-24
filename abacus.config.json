@@ -1,0 +1,57 @@
+{
+  "$schema": "./node_modules/@tjohnson/abacus/configs/abacus.schema.json",
+  "preset": "cloudflare-worker",
+  "check": {
+    "gates": ["lint", "abc", "ratchet", "tsc", "deadcode", "cycles", "dupes", "secrets", "todos"]
+  },
+  "roots": ["src", "web", "scripts"],
+  "tsc": {
+    "projects": ["tsconfig.json", "web/tsconfig.json"]
+  },
+  "exclude": ["\\.d\\.ts$", "\\.test\\.tsx?$", "/components/ui/"],
+  "abc": {
+    "budget": 60,
+    "allow": {}
+  },
+  "size": {
+    "budgets": [
+      {
+        "label": "SPA JS (all chunks, gzip)",
+        "dir": "dist/client/assets",
+        "match": "\\.js$",
+        "max": 286720
+      },
+      {
+        "label": "SPA largest JS chunk (gzip)",
+        "dir": "dist/client/assets",
+        "match": "\\.js$",
+        "max": 266240,
+        "mode": "largest"
+      },
+      {
+        "label": "SPA CSS (gzip)",
+        "dir": "dist/client/assets",
+        "match": "\\.css$",
+        "max": 20480
+      }
+    ],
+    "worker": {
+      "max": 409600
+    }
+  },
+  "ratchet": {
+    "file": "abacus.ratchet.json",
+    "metrics": {
+      "loc": {
+        "roots": ["src"],
+        "slack": 0.02
+      },
+      "oxlintWarnings": true,
+      "abcMax": true,
+      "comments": {
+        "roots": ["src"],
+        "max": 0.3
+      }
+    }
+  }
+}

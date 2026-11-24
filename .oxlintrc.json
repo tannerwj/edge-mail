@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./node_modules/@tjohnson/abacus/configs/oxlint/cloudflare-worker.json"],
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    ".wrangler/**",
+    ".cloudflare/**",
+    "src/bindings.d.ts"
+  ],
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.config.ts", ".dependency-cruiser.cjs", "tests/*.mjs", "scripts/*.mjs"],
+      "rules": {
+        "no-restricted-globals": "off"
+      }
+    },
+    {
+      "files": ["web/conversation-list.tsx"],
+      "rules": {
+        "no-underscore-dangle": [
+          "warn",
+          {
+            "allow": ["_didMount", "_willUpdate"]
+          }
+        ]
+      }
+    }
+  ]
+}
