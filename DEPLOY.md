@@ -19,6 +19,12 @@
 
 7. Under **Settings → Mailboxes & domains**, select **Import Cloudflare domains**, choose domains and create your first mailbox. You can also add a domain manually. Connect its receiving route below. To refresh the domain list later use `pnpm domains:sync --apply WORKER`.
 
+### If GitHub setup interrupts the wizard
+
+After authorizing GitHub, Cloudflare can land on its general repository picker. Reopen the README’s Deploy button and select your Git account to resume creating a copy.
+
+If the wizard reports “Your GitHub authorization has expired,” check both the authorized GitHub user and the Cloudflare Workers and Pages installation. Reconnect from **Git account → New GitHub connection** and retry. Reinstalling a shared GitHub App interrupts builds for other connected repositories. The [guided CLI](#guided-cli) can provision a fresh installation independently if the Git connection stays unavailable. [Cloudflare’s GitHub integration guide](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/#manage-access)
+
 ### Enable outbound mail on a button installation
 
 In the Cloudflare Email Sending dashboard, verify a dedicated sending subdomain and its requested DNS records. In your fork’s `wrangler.jsonc`, add a sender binding and merge the following fields into the existing variables. Replace both sample addresses and use the name of your actual event queue.
