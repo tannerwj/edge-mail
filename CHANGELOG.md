@@ -2,7 +2,7 @@
 
 ## 0.2.4 · Multiple mailboxes
 
-Unread totals refresh across a multi-mailbox workspace. Settings forms protect the next entry while a save refreshes the workspace. Agents can undo read, star and label changes recorded by Cloudflare D1, including changes made before this release.
+Unread totals refresh across a multi-mailbox workspace. Minimizing compose immediately returns to the inbox while the draft saves, so switching mailboxes opens the correct editor. Settings forms protect the next entry while a save refreshes the workspace. Agents can undo read, star and label changes recorded by Cloudflare D1, including changes made before this release.
 
 ## 0.2.3 · First mailbox setup
 

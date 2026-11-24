@@ -42,10 +42,28 @@ export async function checkComposeWindow(page, origin, box) {
     await page.getByRole("link", { name: "All inboxes", exact: true }).click();
     await page.getByRole("list", { name: "Conversations" }).getByRole("link").first().click();
     await page.locator("article .body").waitFor();
-    await dialog.getByLabel("Message", { exact: true }).fill("Keep these notes while I read.");
-    await dialog.getByRole("button", { name: "Minimize compose" }).click();
     const tab = page.getByRole("button", { name: "Restore draft: " + subject });
-    await tab.waitFor();
+    const pendingSave = Promise.withResolvers();
+    const path = "**/api/mailboxes/" + box + "/drafts/*";
+    await page.route(path, async (route) => {
+      if (route.request().method() === "POST") await pendingSave.promise;
+      await route.continue();
+    });
+    const saved = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().includes("/drafts/") &&
+        response.ok(),
+    );
+    try {
+      await dialog.getByLabel("Message", { exact: true }).fill("Keep these notes while I read.");
+      await dialog.getByRole("button", { name: "Minimize compose" }).click();
+      await tab.waitFor();
+    } finally {
+      pendingSave.resolve();
+      await page.unroute(path);
+    }
+    await saved;
     await page.reload();
     await tab.waitFor();
     assert.equal(await dialog.count(), 0);

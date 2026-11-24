@@ -121,8 +121,8 @@ export function ComposeWindow({ controls, close, subject, children, save, send }
     pinned = mode === "pinned" && !wide;
   const movable = !pinned && !wide;
   const lastFocusRef = useWindowFocus(dialog, minimized, pinned, wide);
-  async function minimize() {
-    await save?.();
+  function minimize() {
+    void save?.();
     place("minimized");
     requestAnimationFrame(() => restore.current?.focus());
   }
@@ -185,12 +185,7 @@ export function ComposeWindow({ controls, close, subject, children, save, send }
             <h1>{subject || "New message"}</h1>
           </div>
           <div className="window-controls">
-            <button
-              type="button"
-              aria-label="Minimize compose"
-              title="Minimize"
-              onClick={() => void minimize()}
-            >
+            <button type="button" aria-label="Minimize compose" title="Minimize" onClick={minimize}>
               <Minus />
             </button>
             <button
