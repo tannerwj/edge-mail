@@ -54,6 +54,6 @@ Use **All inboxes** or expand **By domain** to read across mailboxes. Drag the d
 
 ## Send feedback to the project
 
-Choose **Feedback** in the sidebar or **Settings → Project feedback**. Pick a category, optionally select an area and describe the problem or suggestion in 200 characters. **Review feedback** shows the exact details, including your installed version. Choose **Send privately** to share them with the Edge Mail maintainer. Leave mailbox contents, addresses and credentials out of the summary.
+Choose **Feedback** in the sidebar or **Settings → Project feedback**. Pick a category, optionally select an area and describe the problem or suggestion in 200 characters. **Review feedback** shows the exact details, including your installed version. Choose **Send privately** to share them with the Edge Mail maintainer. Their authorized coding agents can read reports and maintainer replies to investigate fixes. Leave mailbox contents, addresses and credentials out of the summary.
 
 In **Your reports**, choose **Check for reply** for a status update, a private reply or a linked GitHub issue. Receipts live in the same browser profile under your sign-in. Clearing site data or rotating the installation's setup secret loses access to earlier replies. A failed send can be retried with the original receipt. You can also open a public issue on GitHub.

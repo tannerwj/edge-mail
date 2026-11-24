@@ -40,7 +40,10 @@ function Review({ report }: { report: Report }) {
   return (
     <section aria-label="Feedback preview">
       <h2>Review your feedback</h2>
-      <p>The Edge Mail maintainer will receive these details privately.</p>
+      <p>
+        The Edge Mail maintainer and their authorized coding agents can read these details to
+        investigate fixes.
+      </p>
       <dl className="feedback-preview">
         <dt>Category</dt>
         <dd>{labels[report.kind]}</dd>

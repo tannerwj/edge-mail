@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.1 · Feedback review
+
+The private feedback preview explains who can read a report. The maintainer’s authorized coding agents can read submitted reports to investigate fixes. Existing installations can use the same feedback channel without a migration.
+
 ## 0.2.0 · Private project feedback
 
 Downstream users can send reviewed reports from the inbox and check for a maintainer reply on the same device. No mailbox migration is required.
