@@ -30,8 +30,8 @@ export function Form({
     setStatus("");
     try {
       await submit(values);
-      await client.invalidateQueries();
       form.reset();
+      await client.invalidateQueries();
       setStatus("Saved");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Request failed");
@@ -46,7 +46,7 @@ export function Form({
         <label key={f.key}>
           {f.label}
           {f.options ? (
-            <select name={f.key} required>
+            <select name={f.key} required disabled={busy}>
               {f.options.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -54,7 +54,7 @@ export function Form({
               ))}
             </select>
           ) : (
-            <input name={f.key} required type={f.type || "text"} maxLength={254} />
+            <input name={f.key} required type={f.type || "text"} maxLength={254} disabled={busy} />
           )}
         </label>
       ))}
