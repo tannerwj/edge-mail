@@ -1,3 +1,4 @@
+import { claimRace } from "./claim-race.mjs";
 import { feedbackService, exerciseFeedback } from "./project-feedback.mjs";
 import { exerciseList, publisher } from "./publisher.mjs";
 import { operatorService, exerciseOperatorService } from "./mail-provider-settings.mjs";
@@ -183,6 +184,7 @@ try {
   await exerciseList(worker, ownerJWT, db, lists);
   await exerciseHooks(worker, ownerJWT, db, hooks, receiver);
   await exerciseOperatorService(worker, ownerJWT, operator);
+  await claimRace(worker, db, ownerJWT, memberJWT);
   const cimd = await worker.dispatchFetch("http://127.0.0.1/api/oauth/consent", {
     method: "POST",
     headers: {

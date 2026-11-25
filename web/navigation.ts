@@ -16,6 +16,8 @@ declare module "@tanstack/react-router" {
     composeShortcut?: string;
   }
 }
+export const workFolders = ["drafts", "scheduled", "sent"] as const;
+export const sentRoutes = ["/inboxes/sent", "/inboxes/sent/$box/messages/$message"] as const;
 export const allMessageRoute = "/inboxes/$box/messages/$message";
 export const domainMessageRoute = "/domains/$domain/inbox/$box/messages/$message";
 export const combinedSearchRoutes = [
@@ -36,6 +38,9 @@ export function destination(view: MailView & { box: string }) {
   const search = {};
   if (draft) return { to: draftRoute, params: { box, draft }, search: {} };
   if (view.view === "unified") {
+    if (folder === "sent" && !q)
+      return { to: message ? sentRoutes[1] : sentRoutes[0], params: { box, message }, search };
+    if (folder === "drafts" || folder === "scheduled") return { to: "/inboxes/" + folder, search };
     if (q) {
       const params = { box, message, domain: view.domain, term: "~" + q };
       const [all, allMessage, domain, domainMessage] = combinedSearchRoutes;
@@ -73,11 +78,15 @@ export function useMailLocation() {
     : {
         ...params,
         q: params.term?.startsWith("~") ? params.term.slice(1) : search.q,
-        folder: pathname.endsWith("/drafts")
-          ? "drafts"
-          : params.folder === "search"
-            ? undefined
-            : params.folder,
+        folder:
+          workFolders.find(
+            (f) => pathname === "/inboxes/" + f || pathname.startsWith("/inboxes/" + f + "/"),
+          ) ??
+          (pathname.endsWith("/drafts")
+            ? "drafts"
+            : params.folder === "search"
+              ? undefined
+              : params.folder),
         view:
           pathname.startsWith("/domains/") && pathname.endsWith("/setup")
             ? "domain-setup"

@@ -1,3 +1,5 @@
+import { Conversation } from "./conversation";
+import { Claim } from "./claim";
 import { MarkOnOpen } from "./mark-on-open";
 import { RecipientHeader } from "./recipient-header";
 import { ArrowLeft, ChevronDown, Printer, Info } from "lucide-react";
@@ -14,7 +16,20 @@ import { Actions } from "./triage";
 import { Reminders } from "./reminders";
 import { FormattedBody } from "./formatted";
 import { Attachments } from "./attachments";
-import { Status, formatDate } from "./mail-display";
+import { Status } from "./mail-display";
+function backLabel(view: MailView) {
+  return view.view === "unified"
+    ? view.domain
+      ? "Domain inbox"
+      : view.folder === "sent"
+        ? "All sent"
+        : "All inboxes"
+    : view.q
+      ? "Search"
+      : view.folder
+        ? view.folder[0].toUpperCase() + view.folder.slice(1)
+        : "Inbox";
+}
 export function Reader({ box, id, view }: { box: Box; id: string; view: MailView }) {
   const q = useQuery({
     queryKey: ["message", box.id, id],
@@ -27,44 +42,22 @@ export function Reader({ box, id, view }: { box: Box; id: string; view: MailView
     <article className="mail-reading">
       <div className="reading-toolbar">
         <Link className="back" {...destination({ ...view, box: box.id, message: undefined })}>
-          <ArrowLeft size={16} />{" "}
-          {view.view === "unified"
-            ? view.domain
-              ? "Domain inbox"
-              : "All inboxes"
-            : view.q
-              ? "Search"
-              : view.folder
-                ? view.folder[0].toUpperCase() + view.folder.slice(1)
-                : "Inbox"}
+          <ArrowLeft size={16} /> {backLabel(view)}
         </Link>
         {!box.can_edit && <small>Read-only mailbox</small>}
         {!!box.can_edit && <MarkOnOpen key={id} id={id} box={box.id} unread={!m.is_read} />}
         <Actions view={view} key={"actions:" + id} box={box} message={m} />
       </div>
+      {m.thread && (!!m.thread.shared || !!m.thread.claimed_by) && (
+        <Claim box={box} state={m.thread} />
+      )}
       {m.thread && <Reminders key={m.thread.thread_id} box={box} state={m.thread} />}
       <div className="letter">
         <h1>{m.subject || "(No subject)"}</h1>
         {m.protection === "signed" && <p>Signed (not verified)</p>}
         {m.protection === "encrypted" && <p>Encrypted, not supported</p>}
         <RecipientHeader m={m} />
-        {m.conversation.length > 1 && (
-          <details className="conversation">
-            <summary>Conversation · {m.conversation.length} messages</summary>
-            {m.conversation.map((row) => (
-              <Link
-                key={row.id}
-                {...destination({ ...view, box: box.id, message: row.id })}
-                aria-current={row.id === id ? "page" : undefined}
-              >
-                {row.subject || "(No subject)"}
-                <small>
-                  {row.sender} · {formatDate(row.received_at)}
-                </small>
-              </Link>
-            ))}
-          </details>
-        )}
+        {m.conversation.length > 1 && <Conversation key={id} box={box} view={view} message={m} />}
         <FormattedBody
           key={"formatted:" + m.id}
           box={box.id}

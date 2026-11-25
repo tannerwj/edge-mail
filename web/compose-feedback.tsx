@@ -68,8 +68,8 @@ export function UndoNotice({ notice, clear }: { notice: Notice; clear: (id: stri
             discard ? { action: "restore", revision: notice.revision } : { action: "undo" },
           ),
         );
-      await client.invalidateQueries({ queryKey: ["drafts", box] });
-      await client.invalidateQueries({ queryKey: ["outbox", box] });
+      await client.invalidateQueries({ queryKey: ["drafts"] });
+      await client.invalidateQueries({ queryKey: ["outbox"] });
       await navigate(link(box, result.id));
       clear(id);
     } catch (e) {

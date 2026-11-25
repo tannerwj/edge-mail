@@ -32,14 +32,21 @@ export async function fileMessages(ids: string[], field: string, value: string |
     );
   }
 }
+const noticeSchema = z.object({
+  text: z.string(),
+  undo: z.string(),
+  snooze: z.optional(z.object({ box: z.string(), thread: z.string() })),
+});
+export function listNotice(detail: z.infer<typeof noticeSchema>) {
+  window.dispatchEvent(new CustomEvent("mail-triage", { detail }));
+}
 export function TriageNotice() {
-  const [notice, setNotice] = useState<{ text: string; undo: string }>(),
+  const [notice, setNotice] = useState<z.infer<typeof noticeSchema>>(),
     [busy, setBusy] = useState(false);
   const client = useQueryClient();
   useEffect(() => {
     const show = (e: Event) => {
-      if (e instanceof CustomEvent)
-        setNotice(z.object({ text: z.string(), undo: z.string() }).parse(e.detail));
+      if (e instanceof CustomEvent) setNotice(noticeSchema.parse(e.detail));
     };
     window.addEventListener("mail-triage", show);
     return () => window.removeEventListener("mail-triage", show);
@@ -53,7 +60,14 @@ export function TriageNotice() {
     if (!notice) return;
     setBusy(true);
     try {
-      await api("inbox/triage", { undo: notice.undo });
+      if (notice.snooze)
+        await api("mailboxes/" + notice.snooze.box + "/reminders", {
+          action: "thread_snooze",
+          at: null,
+          ids: [notice.snooze.thread],
+          undo_revision: notice.undo,
+        });
+      else await api("inbox/triage", { undo: notice.undo });
       setNotice({ text: "Change undone", undo: "" });
       await refreshMail(client);
     } catch (e) {

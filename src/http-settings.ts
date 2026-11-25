@@ -1,3 +1,4 @@
+import { combinedWork } from "./ops/combined-work";
 import { unifiedInbox, searchBookmarks } from "./ops/search-bookmarks";
 import { personErasure } from "./person-erasure";
 import { releaseStatus } from "./upstream";
@@ -44,6 +45,14 @@ function readNamedSetting(env: Bindings, user: User, url: URL) {
       return notices(env, user);
     case "/api/grants":
       return myGrants(env, user);
+    case "/api/inboxes/drafts":
+    case "/api/inboxes/scheduled":
+      return combinedWork(
+        env,
+        user,
+        url.pathname.endsWith("/drafts"),
+        url.searchParams.get("before"),
+      );
     case "/api/inbox":
       return unifiedInbox(env, user, url);
     case "/api/searches":

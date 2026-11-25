@@ -1,3 +1,4 @@
+import { fourFeatures } from "./four-features.mjs";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -5,19 +6,20 @@ import { chromium } from "playwright";
 import { mailFixture } from "./mail-fixture.mjs";
 const { origin, token, wrangler, state, start, json, request, close } = await mailFixture();
 let browser;
-async function deliver(to, subject) {
+async function deliver(to, subject, options = {}) {
   const lines = [
     "From: Casey <casey@vendor.test>",
     "To: " + to,
     "Cc: alex@vendor.test",
-    "Message-ID: <" + crypto.randomUUID() + "@vendor.test>",
+    "Message-ID: " + (options.wire || "<" + crypto.randomUUID() + "@vendor.test>"),
+    ...(options.reply ? ["In-Reply-To: " + options.reply] : []),
     "Subject: " + subject,
     "Content-Type: multipart/mixed; boundary=parts",
     "",
     "--parts",
     "Content-Type: text/plain",
     "",
-    "Tuesday pickup confirmed.",
+    options.body || "Tuesday pickup confirmed.",
     "--parts",
     'Content-Type: text/plain; name="pickup.txt"',
     'Content-Disposition: attachment; filename="pickup.txt"',
@@ -252,6 +254,7 @@ try {
   console.log(
     "PASS phone reader · accessible recipients, scoped search and preserved unread state",
   );
+  await fourFeatures({ page, go, role, boxes, json, request, start, deliver });
 } finally {
   await browser?.close();
   await close();

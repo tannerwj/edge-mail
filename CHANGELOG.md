@@ -1,5 +1,9 @@
 # Edge Mail changelog
 
+## 0.2.6 · Shared conversations and combined folders
+
+All drafts, All scheduled and All sent show the originating mailbox. An editor can claim a conversation, see who is answering, and release it for a colleague. Expand individual replies in the reader or jump to the latest unread message. On a phone, use the inbox row menu to archive a conversation or snooze it until tomorrow morning, with Undo. Enable swipe shortcuts in Preferences to do the same with a gesture.
+
 ## 0.2.5 · Mailbox search, sending and triage
 
 Choose the sending mailbox while writing a new message. The draft keeps its recipients, text and attachments. Sent shows the audience, and the reader exposes To and Cc before replying. All inboxes and domain views support scoped search, filters and bulk actions. Compact rows retain mailbox names. Filing mail offers Undo.

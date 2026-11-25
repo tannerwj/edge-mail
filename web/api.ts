@@ -58,17 +58,36 @@ export const inboxSchema = z.object({
       ...message,
       mailbox_id: z.optional(z.string()),
       snippet: z.string(),
+      thread_id: z.string(),
+      claimed_by: z.nullable(z.string()),
       message_count: z.number(),
     }),
   ),
   next: z.nullable(z.string()),
 });
+const conversationFields = {
+  conversation: z.array(
+    z.object({
+      id: z.string(),
+      subject: z.string(),
+      received_at: z.string(),
+      sender: z.string(),
+      is_read: z.number(),
+    }),
+  ),
+  conversation_next: z.nullable(z.string()),
+  latest_unread: z.nullable(z.string()),
+};
+export const conversationSchema = z.object(conversationFields);
 export const detailSchema = z.object({
   ...message,
   thread: z.optional(
     z.nullable(
       z.object({
         thread_id: z.string(),
+        claimed_by: z.nullable(z.string()),
+        mine: z.number(),
+        shared: z.number(),
         muted: z.nullable(z.number()),
         snoozed_until: z.nullable(z.number()),
         follow_up_at: z.nullable(z.number()),
@@ -83,9 +102,7 @@ export const detailSchema = z.object({
   unsubscribeHost: z.optional(z.nullable(z.string())),
   deliveryStatus: z.array(z.object({ kind: z.string(), recipients: z.number() })),
   labels: z.array(z.string()),
-  conversation: z.array(
-    z.object({ id: z.string(), subject: z.string(), received_at: z.string(), sender: z.string() }),
-  ),
+  ...conversationFields,
   screening: z.optional(z.nullable(z.string())),
   deliveries: z.array(
     z.object({

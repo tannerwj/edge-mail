@@ -32,6 +32,19 @@ function timerUpdate(op: string, a: Data) {
     };
   throw new Problem(400, "Choose a conversation action");
 }
+function snoozeGuard(op: string, a: Data) {
+  const expected =
+    typeof a.undo_revision === "string" && op === "thread_snooze" && a.at === null
+      ? a.undo_revision
+      : undefined;
+  const fresh = a.list_snooze === true && op === "thread_snooze" && a.at !== null;
+  const stateGuard = expected
+    ? " AND EXISTS(SELECT 1 FROM thread_state s WHERE s.mailbox_id=thread_members.mailbox_id AND s.thread_id=thread_members.thread_id AND s.revision=?)"
+    : fresh
+      ? " AND NOT EXISTS(SELECT 1 FROM thread_state s WHERE s.mailbox_id=thread_members.mailbox_id AND s.thread_id=thread_members.thread_id AND s.snoozed_until>unixepoch()*1000)"
+      : "";
+  return { expected, fresh, stateGuard };
+}
 export async function setThreadState(
   env: Bindings,
   who: Who,
@@ -52,8 +65,16 @@ export async function setThreadState(
     c = who.credential;
   if (!(await env.DB.prepare(writable).bind(who.user.id, box).first()))
     throw new Problem(403, "Mailbox editor required");
-  const selection = `WITH eligible AS(SELECT DISTINCT thread_id FROM thread_members WHERE mailbox_id IN (${writable}) AND thread_id IN (SELECT value FROM json_each(?)) ${c ? "AND EXISTS(" + liveWrite + ")" : ""}),selected AS(SELECT thread_id FROM eligible WHERE (SELECT count(*) FROM eligible)=?) `;
-  const params = [who.user.id, box, JSON.stringify(ids), ...(c ? guard(c, box) : []), ids.length];
+  const { fresh, expected, stateGuard } = snoozeGuard(op, a);
+  const selection = `WITH eligible AS(SELECT DISTINCT thread_id FROM thread_members WHERE mailbox_id IN (${writable}) AND thread_id IN (SELECT value FROM json_each(?)) ${stateGuard} ${c ? "AND EXISTS(" + liveWrite + ")" : ""}),selected AS(SELECT thread_id FROM eligible WHERE (SELECT count(*) FROM eligible)=?) `;
+  const params = [
+    who.user.id,
+    box,
+    JSON.stringify(ids),
+    ...(expected ? [expected] : []),
+    ...(c ? guard(c, box) : []),
+    ids.length,
+  ];
   const sql = (s: string, ...values: (string | number | null)[]) =>
     env.DB.prepare(selection + s).bind(...params, ...values);
   const batch = [sql("SELECT count(*) n FROM selected")],
@@ -106,7 +127,11 @@ export async function setThreadState(
         .catch(() => console.warn('{"event":"reminder_alarm_deferred"}'));
     await changed(env, box);
   }
-  return { matched: ids.length, ...(c && !dry ? { audit_id: rev } : {}) };
+  return {
+    matched: ids.length,
+    ...(c && !dry ? { audit_id: rev } : {}),
+    ...(fresh && !dry ? { revision: rev } : {}),
+  };
 }
 export async function undoTimer(env: Bindings, who: Who, box: string, id: string, dry: boolean) {
   const c = who.credential,

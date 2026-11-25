@@ -34,7 +34,12 @@ function receipt(env: Bindings, user: User, raw: unknown): Undo {
     throw new Problem(409, "Undo has expired");
   return parsed;
 }
-export async function workspaceTriage(env: Bindings, user: User, data: Record<string, unknown>) {
+export async function workspaceTriage(
+  env: Bindings,
+  user: User,
+  data: Record<string, unknown>,
+  onlyInbox = false,
+) {
   const undo = data.undo ? receipt(env, user, data.undo) : undefined;
   const ids = undo ? undo.rows.map((r) => r[0]) : data.ids;
   if (
@@ -50,6 +55,7 @@ export async function workspaceTriage(env: Bindings, user: User, data: Record<st
   if (undo) args.push(undo.value);
   const scope =
     base +
+    (onlyInbox ? " AND m.folder='inbox'" : "") +
     (undo ? " AND m." + undo.field + "=?" : "") +
     "), selected AS MATERIALIZED (SELECT * FROM eligible WHERE (SELECT COUNT(*) FROM eligible)=?) ";
   args.push(selected.length);
@@ -80,4 +86,18 @@ export async function workspaceTriage(env: Bindings, user: User, data: Record<st
     return { matched: selected.length, undo: sign(env, payload) + "." + payload };
   }
   return { matched: selected.length };
+}
+
+export async function archiveConversation(env: Bindings, user: User, box: string, thread: string) {
+  const rows = await env.DB.prepare(
+    `SELECT m.id FROM messages m JOIN thread_members t ON t.mailbox_id=m.mailbox_id AND t.message_id=m.id WHERE m.folder='inbox' AND m.mailbox_id=? AND t.thread_id=? AND m.mailbox_id IN (${writableMailboxes}) LIMIT 201`,
+  )
+    .bind(box, thread, user.id)
+    .all<{ id: string }>();
+  return workspaceTriage(
+    env,
+    user,
+    { ids: rows.results.map((row) => row.id), field: "folder", value: "archive" },
+    true,
+  );
 }

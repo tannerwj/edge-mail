@@ -41,7 +41,7 @@ export function MailFilter({ box, view, scope }: { box: Box; view: MailView; sco
         box: box.id,
         folder: undefined,
         message: undefined,
-        q: q || undefined,
+        q: q && view.view === "unified" && view.folder === "sent" ? "in:sent " + q : q || undefined,
       }),
     );
   }

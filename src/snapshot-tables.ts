@@ -34,7 +34,7 @@ const withAgents = [
   "triage_undo",
   "agent_code_usage",
 ] as const;
-export const migration = "0035_discarded_drafts.sql";
+export const migration = "0036_conversation_claims.sql";
 const withScreening = [
   ...withAgents,
   "mailbox_screening",
@@ -67,7 +67,8 @@ const withBudgets = [
 const withReports = [...withBudgets, "dmarc_mailboxes", "dmarc_reports"] as const;
 const withAi = [...withReports, "mailbox_ai"] as const;
 const withSearches = [...withAi, "saved_searches"] as const;
-export const tables = [...withSearches, "mailbox_quotas"] as const;
+const withQuotas = [...withSearches, "mailbox_quotas"] as const;
+export const tables = [...withQuotas, "conversation_claims"] as const;
 const inventories: Record<string, readonly (typeof tables)[number][]> = {
   "0007_snapshots.sql": first,
   "0008_instance_keys.sql": withKeys,
@@ -96,7 +97,8 @@ const inventories: Record<string, readonly (typeof tables)[number][]> = {
   "0031_mailbox_ai.sql": withAi,
   "0032_saved_searches.sql": withSearches,
   "0033_person_erasure.sql": withSearches,
-  "0034_inbound_quotas.sql": tables,
+  "0034_inbound_quotas.sql": withQuotas,
+  "0035_discarded_drafts.sql": withQuotas,
   [migration]: tables,
 };
 export function snapshotTables(version: string) {

@@ -154,7 +154,7 @@ export function DraftDialog({
         });
       });
     }
-    void client.invalidateQueries({ queryKey: ["drafts", box.id] });
+    void client.invalidateQueries({ queryKey: ["drafts"] });
     controls.close();
   }
   return current.data ? (

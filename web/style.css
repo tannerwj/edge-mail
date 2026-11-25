@@ -74,7 +74,7 @@
   display: flex;
   align-items: stretch;
 }
-.message-row > .item {
+.message-row .item {
   flex: 1;
   min-width: 0;
 }
@@ -702,7 +702,7 @@ main,
   flex: 1;
   border-top: 1px solid var(--line);
 }
-.message-row > .item {
+.message-row .item {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   align-items: start;
@@ -778,7 +778,7 @@ main,
   font-size: 0.85rem;
   color: var(--muted);
 }
-[data-theme="compact"] .message-row > .item {
+[data-theme="compact"] .message-row .item {
   padding: 8px 14px;
 }
 [data-theme="compact"] .snippet {
@@ -1971,4 +1971,88 @@ a.queue-row:hover {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.conversation-claim,
+.inline-reply > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.conversation-claim {
+  font-size: 0.85rem;
+  padding: 0.4rem 0;
+}
+.inline-reply {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.inline-reply a,
+.conversation-claim span {
+  overflow-wrap: anywhere;
+}
+.inline-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0.75rem;
+}
+
+.list-action-row {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.row-more,
+.row-actions {
+  display: none;
+}
+@media (max-width: 760px) {
+  .list-action-row {
+    display: flex;
+    align-items: center;
+    touch-action: pan-y;
+  }
+  .list-action-row > .item {
+    flex: 1;
+    min-width: 0;
+  }
+  .list-action-row .row-more {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .row-actions {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--canvas);
+  }
+  .row-actions button {
+    min-height: 44px;
+  }
+}
+
+.claim-label {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 44%;
+  margin-inline-start: 0.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.claim-label svg {
+  flex-shrink: 0;
+}
+.claim-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

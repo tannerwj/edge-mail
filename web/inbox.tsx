@@ -1,5 +1,6 @@
+import { ListActions } from "./list-actions";
 import { messagePerson } from "./recipient-header";
-import { RefreshCw, Paperclip } from "lucide-react";
+import { RefreshCw, Paperclip, UserRoundCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -30,7 +31,9 @@ function listHeading(box: Box | undefined, view: MailView, scope: Box[]) {
   const title = unified
     ? view.domain
       ? scope[0]?.address.split("@")[1] || "Domain inbox"
-      : "All inboxes"
+      : view.folder === "sent"
+        ? "All sent"
+        : "All inboxes"
     : view.q
       ? "Search results"
       : (view.folder || "Inbox").replace(/^./, (c) => c.toUpperCase());
@@ -46,7 +49,7 @@ function listHeading(box: Box | undefined, view: MailView, scope: Box[]) {
 function useConversations(box: Box | undefined, view: MailView, unified: boolean) {
   return useInfiniteQuery({
     queryKey: unified
-      ? ["unified-inbox", view.domain, view.q]
+      ? ["unified-inbox", view.domain, view.q, view.folder]
       : ["inbox", box?.id, view.q, view.folder],
     initialPageParam: "",
     refetchInterval: 15000,
@@ -54,7 +57,12 @@ function useConversations(box: Box | undefined, view: MailView, unified: boolean
       api(
         unified
           ? "inbox?" +
-              new URLSearchParams({ domain: view.domain || "", before: pageParam, q: view.q || "" })
+              new URLSearchParams({
+                ...(view.folder ? { folder: view.folder } : {}),
+                domain: view.domain || "",
+                before: pageParam,
+                q: view.q || "",
+              })
           : "mailboxes/" +
               box?.id +
               "/messages?group=thread&before=" +
@@ -105,6 +113,12 @@ function ConversationLink({
           </time>
         </span>
         <b className={m.is_read ? "" : "unread"}>
+          {m.claimed_by && (
+            <small className="claim-label" title={"Claimed by " + m.claimed_by}>
+              <UserRoundCheck size={13} aria-hidden="true" />
+              <span>{m.claimed_by}</span>
+            </small>
+          )}
           {m.starred ? "★ " : ""}
           {m.subject || "(No subject)"}
           {m.message_count > 1 ? " · " + m.message_count : ""}
@@ -191,27 +205,13 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
         ) : (
           <ConversationList rows={messages} selected={selected}>
             {(m) => (
-              <div key={m.id} className="message-row">
-                {(unified
-                  ? scope.some((b) => b.id === m.mailbox_id && b.can_edit)
-                  : !!box?.can_edit) &&
-                  selection.active && (
-                    <input
-                      type="checkbox"
-                      aria-label={"Select message " + (m.subject || "(No subject)")}
-                      checked={selection.ids.includes(m.id)}
-                      onChange={() => selection.toggle(m.id)}
-                    />
-                  )}
-                <ConversationLink
-                  m={m}
-                  box={box}
-                  view={view}
-                  mailbox={
-                    unified ? scope.find((b) => b.id === m.mailbox_id)?.display_name : undefined
-                  }
-                />
-              </div>
+              <InboxRow
+                m={m}
+                owner={unified ? scope.find((b) => b.id === m.mailbox_id) : box}
+                view={view}
+                unified={unified}
+                selection={selection}
+              />
             )}
           </ConversationList>
         )}
@@ -229,6 +229,52 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
           <EmptyReader search={true} />
         ) : null}
       </section>
+    </div>
+  );
+}
+
+function InboxRow({
+  m,
+  owner,
+  view,
+  unified,
+  selection,
+}: {
+  m: ReturnType<typeof inboxSchema.parse>["messages"][number];
+  owner?: Box;
+  view: MailView;
+  unified: boolean;
+  selection: ReturnType<typeof useSelection>;
+}) {
+  const row = (
+    <ConversationLink
+      m={m}
+      box={owner}
+      view={view}
+      mailbox={unified ? owner?.display_name : undefined}
+    />
+  );
+  return (
+    <div key={m.id} className="message-row">
+      {!!owner?.can_edit && selection.active && (
+        <input
+          type="checkbox"
+          aria-label={"Select message " + (m.subject || "(No subject)")}
+          checked={selection.ids.includes(m.id)}
+          onChange={() => selection.toggle(m.id)}
+        />
+      )}
+      {owner?.can_edit &&
+      !selection.active &&
+      !view.q &&
+      (view.folder ?? "inbox") === "inbox" &&
+      m.folder === "inbox" ? (
+        <ListActions box={owner.id} thread={m.thread_id}>
+          {row}
+        </ListActions>
+      ) : (
+        row
+      )}
     </div>
   );
 }

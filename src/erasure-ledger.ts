@@ -127,6 +127,11 @@ export async function hideErased(env: Store, box: string, id: string) {
     stmt("DELETE FROM triage_undo WHERE message_id=?", id),
     stmt("DELETE FROM thread_members WHERE mailbox_id=? AND message_id=?", box, id),
     stmt(
+      "UPDATE conversation_claims SET thread_id=(SELECT min(message_id) FROM thread_members WHERE mailbox_id=?1 AND thread_id=?2) WHERE mailbox_id=?1 AND thread_id=?2 AND EXISTS(SELECT 1 FROM thread_members WHERE mailbox_id=?1 AND thread_id=?2)",
+      box,
+      id,
+    ),
+    stmt(
       "UPDATE thread_state SET thread_id=(SELECT min(message_id) FROM thread_members WHERE mailbox_id=?1 AND thread_id=?2),revision=lower(hex(randomblob(16))) WHERE mailbox_id=?1 AND thread_id=?2 AND EXISTS(SELECT 1 FROM thread_members WHERE mailbox_id=?1 AND thread_id=?2)",
       box,
       id,

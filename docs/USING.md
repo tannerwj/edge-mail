@@ -59,3 +59,13 @@ In **Mailboxes & domains**, open the setup page for a domain to see the last obs
 Choose **Feedback** in the sidebar or **Settings → Project feedback**. Pick a category, optionally select an area and describe the problem or suggestion in 200 characters. Add optional reproduction details of up to 2,000 characters. **Review feedback** shows the exact details, including your installed version. Choose **Send privately** to share them with the Edge Mail maintainer. Their authorized coding agents can read reports and maintainer replies to investigate fixes. Leave mailbox contents, addresses and credentials out of both fields.
 
 In **Your reports**, choose **Check for reply** for a status update, a private reply or a linked GitHub issue. Receipts live in the same browser profile under your sign-in. Clearing site data or rotating the installation's setup secret loses access to earlier replies. A failed send can be retried with the original receipt. You can also open a public issue on GitHub.
+
+## Working across mailboxes
+
+Open **All drafts**, **All scheduled** or **All sent** in Workspace. Drafts and schedules show your own work in mailboxes you can edit. Each row names its mailbox. Opening a draft or cancelling a reversible scheduled send returns to its original sending identity. All sent shows the shared sent copies you can read.
+
+In a shared conversation, choose **Claim conversation** to tell colleagues you are handling it. Your name appears in the reader and list. Choose **Release claim** to hand it back. A claim coordinates replies and leaves ordinary reading and replying available to colleagues.
+
+Open **Conversation** in a message and expand an earlier reply to read its text in place. The subject opens the full message. **Jump to latest unread** opens the newest unread reply when it is elsewhere in the thread.
+
+On a phone, the inbox row’s **Conversation actions** button can archive the conversation or snooze it until tomorrow at 9 AM local time. Both actions offer **Undo**. To use gestures, enable **Swipe inbox rows on this device** in Preferences. Swipe right to archive or left to snooze. The reader’s back swipe and the inbox’s pull-to-refresh still work.

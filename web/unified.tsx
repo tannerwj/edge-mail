@@ -1,5 +1,5 @@
 import type { MailView } from "./navigation";
-import { Layers, Globe } from "lucide-react";
+import { Layers, Globe, Send, FilePenLine, Timer } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Workspace } from "./api";
 function domains(space: Workspace) {
@@ -17,10 +17,31 @@ export function WorkspaceInboxes({ space, view }: { space: Workspace; view: Mail
   if (!space.mailboxes.length) return null;
   return (
     <>
-      <Link to="/inboxes" data-selected={(view.view === "unified" && !selected) || undefined}>
+      <Link
+        to="/inboxes"
+        data-selected={(view.view === "unified" && !selected && !view.folder) || undefined}
+      >
         <Layers size={16} />
         All inboxes
       </Link>
+      {(
+        [
+          ["drafts", "All drafts", FilePenLine],
+          ["scheduled", "All scheduled", Timer],
+          ["sent", "All sent", Send],
+        ] as const
+      )
+        .filter(([f]) => f === "sent" || space.mailboxes.some((b) => b.can_edit))
+        .map(([f, label, Icon]) => (
+          <Link
+            key={f}
+            to={"/inboxes/" + f}
+            data-selected={(view.view === "unified" && view.folder === f) || undefined}
+          >
+            <Icon size={16} />
+            {label}
+          </Link>
+        ))}
       <details key={selected} open={!!selected}>
         <summary>
           <Globe size={16} />

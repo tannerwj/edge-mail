@@ -1,3 +1,6 @@
+import { messageWrite } from "./http-message";
+import { conversationPage } from "./ops/conversation-page";
+
 import { projectFeedback } from "./project-feedback";
 import { outboxAction } from "./ops/outbox-action";
 import { transportPolicy } from "./transport-policy";
@@ -7,7 +10,7 @@ import { explain } from "./ops/message-explain";
 import { mailboxQuota } from "./ops/mailbox-quota";
 import { readSettings } from "./http-settings";
 import { searchBookmarks } from "./ops/search-bookmarks";
-import { leaveList } from "./ops/list-unsubscribe";
+
 import { personErasure } from "./person-erasure";
 import { aiSettings, mailboxAssistant } from "./ops/mailbox-ai";
 
@@ -20,7 +23,7 @@ import { decide } from "./ops/approvals";
 import { setThreadState } from "./ops/thread-state";
 import { invite, addLogin } from "./ops/people";
 import { listHooks, changeHook } from "./ops/webhooks";
-import { eraseMessage, erasureReceipts } from "./ops/erasure";
+import { erasureReceipts } from "./ops/erasure";
 import { mailboxIdentities, saveSignature } from "./ops/identities";
 import { changePush } from "./ops/push";
 import { acknowledge } from "./ops/notices";
@@ -130,6 +133,8 @@ function mailboxRead(
 function readApi(env: Bindings, user: User, url: URL) {
   const [, , area, box, action, id] = url.pathname.split("/");
   if (area !== "mailboxes" || !box) return readSettings(env, user, url);
+  if (action === "conversation" && id)
+    return conversationPage(env, user, box, id, url.searchParams.get("before"));
   if (!id && ["reports", "assistant"].includes(action))
     return action === "reports" ? reportDashboard(env, user, box) : aiSettings(env, user, box);
   if (action === "disposable") return addressSettings(env, user, box);
@@ -182,19 +187,14 @@ function mailboxWrite(
     return setThreadState(env, { user }, box, String(data.action), data);
   if (action === "quota") return mailboxQuota(env, user, box, data);
   if (action === "webhooks") return changeHook(env, { user }, box, String(data.action), data);
-  if (id && ["erase", "unsubscribe"].includes(action))
-    return action === "erase"
-      ? eraseMessage(env, user, box, id, data.confirm)
-      : leaveList(env, user.id, box, id, data.confirm);
   if (action === "signatures" && !id) return saveSignature(env, user, box, data);
   if (action === "activity" && id) return undoAction(env, { user }, box, id, data.dry_run === true);
   if (action === "screening")
     return id ? trainMessage(env, user, box, id, data.spam) : changeScreen(env, user, box, data);
   if (action === "destinations" && !id) return destinationChange(env, user, box, data);
   if (action === "rules") return ruleChange(env, user, box, id, data);
-  if (action === "messages" && id) return triage(env, user, box, [id], data);
   if (!id) return mailboxCollection(env, user, box, action, data);
-  throw new Problem(404, "Unknown mailbox operation");
+  return messageWrite(env, user, box, action, id, data);
 }
 function mailboxCollection(
   env: Bindings,

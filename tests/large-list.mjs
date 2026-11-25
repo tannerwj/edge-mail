@@ -18,6 +18,8 @@ export async function checkLargeList(page, origin, box) {
       attachment_count: 0,
       folder: "inbox",
       message_count: 1,
+      thread_id: String(i + 1).padStart(26, "0"),
+      claimed_by: null,
     }));
     await tab.setViewportSize({ width: 1300, height: 860 });
     await tab.route("**/api/mailboxes/" + box + "/messages?*", (r) =>

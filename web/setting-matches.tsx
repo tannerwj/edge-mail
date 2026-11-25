@@ -34,6 +34,12 @@ const targets = [
   },
   {
     section: "personal",
+    id: "list-swipes",
+    title: "Swipe inbox rows",
+    words: "phone archive snooze tomorrow gestures",
+  },
+  {
+    section: "personal",
     id: "keyboard-shortcuts",
     title: "Keyboard shortcuts",
     words: "single key commands",

@@ -87,8 +87,8 @@ export function ComposeDesk({
                 feedback.show({ ...info, id, box: box.id });
                 remove(id);
                 leave(draft, info.kind !== "discard");
-                void client.invalidateQueries({ queryKey: ["drafts", box.id] });
-                void client.invalidateQueries({ queryKey: ["outbox", box.id] });
+                void client.invalidateQueries({ queryKey: ["drafts"] });
+                void client.invalidateQueries({ queryKey: ["outbox"] });
               },
               close: () => {
                 remove(id);

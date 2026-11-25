@@ -1,3 +1,5 @@
+import { conversationPage } from "./conversation-page";
+import { claimLabel } from "./conversation-claim";
 import { storedProtection } from "../mail-protection";
 import { listTarget } from "./list-unsubscribe";
 import { threadState } from "./thread-views";
@@ -42,7 +44,7 @@ export async function inbox(
     COUNT(*) OVER (PARTITION BY mailbox_id,thread_id) AS message_count FROM hits) WHERE position=1`
     : "SELECT hits.*,1 AS message_count FROM hits";
   const general =
-    env.DB.prepare(`WITH hits AS (${base}), visible AS (${visible}) SELECT * FROM visible
+    env.DB.prepare(`WITH hits AS (${base}), visible AS (${visible}) SELECT visible.*, ${claimLabel("visible")} AS claimed_by FROM visible
     WHERE (?='' OR (received_at,id)<(?,?)) ORDER BY received_at DESC,id DESC LIMIT 51`).bind(
       id,
       ...bindings,
@@ -83,13 +85,7 @@ export async function readMessage(env: Bindings, p: Principal, mailbox: string, 
   )
     .bind(mailbox, id)
     .all<{ label: string }>();
-  const conversation =
-    await env.DB.prepare(`SELECT m.id,m.subject,m.sender,m.received_at FROM thread_members t
-    JOIN messages m ON m.mailbox_id=t.mailbox_id AND m.id=t.message_id
-    WHERE t.mailbox_id IN (SELECT b.id ${mailboxAccess} AND b.id=?) AND t.thread_id=(SELECT thread_id FROM thread_members WHERE mailbox_id=? AND message_id=?)
-    ORDER BY m.received_at DESC,m.id DESC LIMIT 100`)
-      .bind(human(p).id, mailbox, mailbox, id)
-      .all();
+  const conversation = await conversationPage(env, human(p), mailbox, id);
   return {
     ...fields,
     protection: await storedProtection(
@@ -102,8 +98,8 @@ export async function readMessage(env: Bindings, p: Principal, mailbox: string, 
         ? null
         : (await listTarget(env, human(p).id, mailbox, id))?.host || null,
     deliveryStatus: message.folder === "sent" ? await deliverySummary(env, mailbox, id) : [],
-    conversation: conversation.results,
-    thread: await threadState(env, mailbox, id),
+    ...conversation,
+    thread: await threadState(env, mailbox, id, human(p).id),
     labels: labels.results.map((l) => l.label),
     formatted:
       !!env.CONTENT_ORIGIN &&

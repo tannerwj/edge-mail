@@ -33,8 +33,12 @@ export type Item = {
   attempts: number;
   created_at: string;
 };
+export const canReopen =
+  "(json_type(letter,'$.undo_source') IS NOT NULL OR EXISTS(SELECT 1 FROM drafts d WHERE d.id=json_extract(outbox.letter,'$.restore_draft') AND d.actor=outbox.actor AND d.mailbox_id=outbox.mailbox_id AND d.discarded_until IS NULL))";
 const summary =
-  "id,state,(json_type(letter,'$.undo_source') IS NOT NULL OR EXISTS(SELECT 1 FROM drafts d WHERE d.id=json_extract(outbox.letter,'$.restore_draft') AND d.actor=outbox.actor AND d.mailbox_id=outbox.mailbox_id AND d.discarded_until IS NULL)) AS can_reopen,EXISTS(SELECT 1 FROM agent_reviews ar WHERE ar.id=outbox.id AND ar.state='pending') AS awaiting_approval,error_code,provider,provider_id,due_ms,attempts,created_at,json_extract(letter,'$.scheduledFor') AS scheduled_for,json_extract(letter,'$.subject') AS subject";
+  "id,state," +
+  canReopen +
+  " AS can_reopen,EXISTS(SELECT 1 FROM agent_reviews ar WHERE ar.id=outbox.id AND ar.state='pending') AS awaiting_approval,error_code,provider,provider_id,due_ms,attempts,created_at,json_extract(letter,'$.scheduledFor') AS scheduled_for,json_extract(letter,'$.subject') AS subject";
 const scope = ` FROM outbox WHERE actor=? AND mailbox_id IN (${writable})`;
 function destinations(raw: string, seen: Set<string>) {
   if (!raw.trim()) return [];

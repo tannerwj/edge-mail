@@ -170,6 +170,17 @@ export function Appearance() {
   const [color, setColor] = useState(document.documentElement.dataset.color || "system");
   return (
     <>
+      <label className="appearance" id="list-swipes">
+        <input
+          type="checkbox"
+          defaultChecked={localStorage.getItem("edge-mail-list-swipes") === "on"}
+          onChange={(e) =>
+            localStorage.setItem("edge-mail-list-swipes", e.target.checked ? "on" : "off")
+          }
+        />
+        Swipe inbox rows on this device{" "}
+        <small>Swipe right to archive or left to snooze until tomorrow at 9 AM.</small>
+      </label>
       <label className="appearance" id="keyboard-shortcuts">
         <input
           type="checkbox"

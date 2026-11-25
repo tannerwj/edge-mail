@@ -1,3 +1,4 @@
+import { claimLabel } from "./conversation-claim";
 import { visibleInbox } from "./thread-views";
 import type { Bindings } from "../env";
 import { mailboxAccess } from "./access";
@@ -30,7 +31,7 @@ export function folderList(
     CROSS JOIN thread_members t INDEXED BY conversation_messages ON t.mailbox_id=l.mailbox_id AND t.thread_id=l.thread_id
     CROSS JOIN messages m ON m.id=t.message_id AND m.folder=l.folder ${visible} GROUP BY l.id
   )
-  SELECT l.id,l.mailbox_id,l.sender,md.recipients,md.cc,l.subject,l.snippet,l.received_at,l.attachment_count,l.folder,l.thread_id,
+  SELECT ${claimLabel("l")} AS claimed_by,l.id,l.mailbox_id,l.sender,md.recipients,md.cc,l.subject,l.snippet,l.received_at,l.attachment_count,l.folder,l.thread_id,
     COALESCE(s.all_read,l.is_read) AS is_read,COALESCE(s.any_star,l.starred) AS starred,COALESCE(s.n,1) AS message_count
     FROM latest l LEFT JOIN message_metadata md ON md.message_id=l.id LEFT JOIN stats s ON s.id=l.id ORDER BY l.received_at DESC,l.id DESC`;
   return env.DB.prepare(sql).bind(user, ...bindings, folder, ...(at ? [at, id] : []));

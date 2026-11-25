@@ -33,6 +33,8 @@ export function useLive(box: string | undefined) {
         if (stopped) return;
         if (event.code === 1008) {
           client.removeQueries({ queryKey: ["unified-inbox"] });
+          for (const key of ["outbox", "drafts"])
+            client.removeQueries({ queryKey: [key, "combined"] });
           for (const key of ["inbox", "message", "outbox", "drafts"])
             client.removeQueries({ queryKey: [key, box] });
           void client.invalidateQueries({ queryKey: ["workspace"] });

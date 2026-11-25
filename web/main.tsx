@@ -1,3 +1,4 @@
+import { CombinedWork } from "./combined-work";
 import { Sidebar } from "./sidebar";
 import { Inbox } from "./inbox";
 import { Approvals } from "./approvals";
@@ -36,6 +37,7 @@ import {
   allMessageRoute,
   domainMessageRoute,
   combinedSearchRoutes,
+  sentRoutes,
   searchRoute,
   searchMessageRoute,
   folderRoute,
@@ -160,9 +162,12 @@ function MailWorkspace({
             <h1>Approvals</h1>
             <Approvals />
           </section>
+        ) : location.view === "unified" &&
+          (location.folder === "drafts" || location.folder === "scheduled") ? (
+          <CombinedWork key={location.folder} folder={location.folder} boxes={space.mailboxes} />
         ) : location.view === "unified" && space.mailboxes.length > 0 ? (
           <Inbox
-            key={JSON.stringify([location.domain, location.q])}
+            key={JSON.stringify([location.domain, location.q, location.folder])}
             space={space}
             box={box}
             view={location}
@@ -231,6 +236,9 @@ const routes = [
   allMessageRoute,
   domainMessageRoute,
   ...combinedSearchRoutes,
+  ...sentRoutes,
+  "/inboxes/drafts",
+  "/inboxes/scheduled",
 ].map((path) =>
   createRoute({
     getParentRoute: () => mail,
