@@ -1,5 +1,11 @@
 # Edge Mail changelog
 
+## 0.2.5 · Mailbox search, sending and triage
+
+Choose the sending mailbox while writing a new message. The draft keeps its recipients, text and attachments. Sent shows the audience, and the reader exposes To and Cc before replying. All inboxes and domain views support scoped search, filters and bulk actions. Compact rows retain mailbox names. Filing mail offers Undo.
+
+Preferences includes mark-on-open for editable mailboxes. Snooze and scheduled sending offer local-time presets. Settings search links to common controls. Domain setup shows observed delivery progress, and private feedback includes optional reproduction steps.
+
 ## 0.2.4 · Multiple mailboxes
 
 Unread totals refresh across a multi-mailbox workspace. Minimizing compose immediately returns to the inbox while the draft saves, so switching mailboxes opens the correct editor. Settings forms protect the next entry while a save refreshes the workspace. Agents can undo read, star and label changes recorded by Cloudflare D1, including changes made before this release.

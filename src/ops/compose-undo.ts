@@ -11,7 +11,8 @@ export async function discardAction(
   id: string,
   data: Record<string, unknown>,
 ) {
-  if (!Number.isSafeInteger(data.revision)) throw new Problem(400, "Missing draft revision");
+  if (!Number.isSafeInteger(data.revision) || Number(data.revision) < 1)
+    throw new Problem(400, "Missing draft revision");
   const actor = human(p).id,
     args = [id, actor, actor, box],
     revision = Number(data.revision);
@@ -54,15 +55,16 @@ export async function sweepDiscardedDrafts(env: Bindings) {
         .run();
   }
 }
-async function copyUploads(
+export async function copyUploads(
   env: Bindings,
   box: string,
   from: string,
   to: string,
   files: DraftFile[],
+  target = box,
 ) {
   for (const file of files) {
-    const key = draftFileKey(box, to, file.id);
+    const key = draftFileKey(target, to, file.id);
     if (await env.MAIL.head(key)) continue;
     const obj = await env.MAIL.get(draftFileKey(box, from, file.id));
     if (!obj || obj.size !== file.size)

@@ -1,3 +1,4 @@
+import { SendingMailbox } from "./sending-mailbox";
 import { useDraftActions } from "./draft-actions";
 import { DraftRecipients } from "./recipients";
 import { SendControls } from "./send-controls";
@@ -206,13 +207,14 @@ function Editor({
   close: () => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [moving, setMoving] = useState(false);
   const filesRef = useRef<HTMLDivElement>(null);
   const editor = useDraftAutosave(box, draft);
   const { content, status, state, edit, save, discardUnsaved } = editor;
   const { delay, setDelay, submitting, canSend, send, discard, reminder, setReminder } =
     useDraftActions(box, draft, editor, controls, uploading);
   async function dismiss() {
-    if (uploading || submitting) return;
+    if (moving || uploading || submitting) return;
     await save();
     if (state.current.saved === state.current.latest) return close();
     if (window.confirm("Your latest edits could not be saved. Close and discard those edits?")) {
@@ -226,10 +228,13 @@ function Editor({
       close={() => void dismiss()}
       subject={content.subject}
       save={save}
-      send={() => void send()}
+      send={() => {
+        if (!moving) void send();
+      }}
     >
       <div className="composer">
-        <div className="compose-fields" ref={filesRef} inert={submitting}>
+        <div className="compose-fields" ref={filesRef} inert={submitting || moving}>
+          <SendingMailbox {...{ box, draft, controls, editor, uploading, setMoving }} />
           <DraftEnvelope box={box.id} content={content} edit={edit} />
           <Formatting
             rich={!!content.rich}

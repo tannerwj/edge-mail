@@ -26,9 +26,6 @@ importers:
       '@tanstack/virtual-core':
         specifier: 3.19.13
         version: 3.19.13
-      '@tiptap/core':
-        specifier: 3.35.0
-        version: 3.35.0(@tiptap/pm@3.35.0)
       '@tiptap/pm':
         specifier: 3.35.0
         version: 3.35.0
@@ -1577,11 +1574,6 @@ packages:
 
   '@tanstack/virtual-core@3.19.13':
     resolution: {integrity: sha512-CyCvMm7m5JuvPW6eMPZkZBZk6diySrlUQNNRpQPiEnh2vakyghx82Hw3wW2THFUsl6xJ6uM4lSUaiA2T0oYW8w==}
-
-  '@tiptap/core@3.35.0':
-    resolution: {integrity: sha512-jrtRrAfgL7bXd2ecy0T7G4b6ozwzW9h67B3iQsDmgu7PWytkqbrUPFrki6LjyysrxZEK4jqgRMNCvfe2Yx2fKg==}
-    peerDependencies:
-      '@tiptap/pm': 3.35.0
 
   '@tiptap/pm@3.35.0':
     resolution: {integrity: sha512-bijTl/bhwi+KYo0Xte872JwJl6rTsz557z5NTuuf8f5oqlocIESQLLFHLHsII2t3Urrf78OSnZaGe0qJ/kEU0Q==}
@@ -3967,10 +3959,6 @@ snapshots:
   '@tanstack/store@0.11.3': {}
 
   '@tanstack/virtual-core@3.19.13': {}
-
-  '@tiptap/core@3.35.0(@tiptap/pm@3.35.0)':
-    dependencies:
-      '@tiptap/pm': 3.35.0
 
   '@tiptap/pm@3.35.0':
     dependencies:

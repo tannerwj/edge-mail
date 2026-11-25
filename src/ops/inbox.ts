@@ -7,9 +7,17 @@ import { human, mailboxAccess } from "./access";
 import { folderList } from "./folder-list";
 import { filterMessages } from "./filter";
 
-export async function inbox(env: Bindings, p: Principal, mailbox: string, search: URLSearchParams) {
+export async function inbox(
+  env: Bindings,
+  p: Principal,
+  mailbox: string | { domain: string },
+  search: URLSearchParams,
+) {
   const id = human(p).id;
-  if (!(await env.DB.prepare(`SELECT b.id ${mailboxAccess} AND b.id=?`).bind(id, mailbox).first()))
+  if (
+    typeof mailbox === "string" &&
+    !(await env.DB.prepare(`SELECT b.id ${mailboxAccess} AND b.id=?`).bind(id, mailbox).first())
+  )
     throw new Problem(404, "Mailbox unavailable");
   let at = "",
     messageId = "";
@@ -20,21 +28,24 @@ export async function inbox(env: Bindings, p: Principal, mailbox: string, search
     if (!at || !messageId) throw new Problem(400, "Invalid page cursor");
   }
   const grouped = search.get("group") === "thread";
-  const base = `SELECT m.id,m.sender,m.subject,m.snippet,m.received_at,m.attachment_count,m.folder,m.is_read,m.starred,
+  const selection =
+    typeof mailbox === "string" ? " AND b.id=?" : mailbox.domain ? " AND b.domain_id=?" : "";
+  const bindings = typeof mailbox === "string" ? [mailbox] : mailbox.domain ? [mailbox.domain] : [];
+  const base = `SELECT m.id,m.mailbox_id,m.sender,md.recipients,md.cc,m.subject,m.snippet,m.received_at,m.attachment_count,m.folder,m.is_read,m.starred,
     COALESCE(t.thread_id,m.id) AS thread_id FROM messages m LEFT JOIN message_metadata md ON md.message_id=m.id
     LEFT JOIN thread_members t ON t.mailbox_id=m.mailbox_id AND t.message_id=m.id
-    WHERE m.mailbox_id IN (SELECT b.id ${mailboxAccess} AND b.id=?) AND ${filter.sql}`;
+    WHERE m.mailbox_id IN (SELECT b.id ${mailboxAccess}${selection}) AND ${filter.sql}`;
   const visible = grouped
-    ? `SELECT id,sender,subject,snippet,received_at,attachment_count,folder,all_read AS is_read,any_star AS starred,thread_id,message_count
-    FROM (SELECT hits.*,ROW_NUMBER() OVER (PARTITION BY thread_id ORDER BY received_at DESC,id DESC) AS position,
-    MIN(is_read) OVER (PARTITION BY thread_id) AS all_read,MAX(starred) OVER (PARTITION BY thread_id) AS any_star,
-    COUNT(*) OVER (PARTITION BY thread_id) AS message_count FROM hits) WHERE position=1`
+    ? `SELECT id,mailbox_id,sender,recipients,cc,subject,snippet,received_at,attachment_count,folder,all_read AS is_read,any_star AS starred,thread_id,message_count
+    FROM (SELECT hits.*,ROW_NUMBER() OVER (PARTITION BY mailbox_id,thread_id ORDER BY received_at DESC,id DESC) AS position,
+    MIN(is_read) OVER (PARTITION BY mailbox_id,thread_id) AS all_read,MAX(starred) OVER (PARTITION BY mailbox_id,thread_id) AS any_star,
+    COUNT(*) OVER (PARTITION BY mailbox_id,thread_id) AS message_count FROM hits) WHERE position=1`
     : "SELECT hits.*,1 AS message_count FROM hits";
   const general =
     env.DB.prepare(`WITH hits AS (${base}), visible AS (${visible}) SELECT * FROM visible
     WHERE (?='' OR (received_at,id)<(?,?)) ORDER BY received_at DESC,id DESC LIMIT 51`).bind(
       id,
-      mailbox,
+      ...bindings,
       ...filter.params,
       at,
       at,
@@ -54,7 +65,7 @@ export async function inbox(env: Bindings, p: Principal, mailbox: string, search
 }
 export async function readMessage(env: Bindings, p: Principal, mailbox: string, id: string) {
   const message =
-    await env.DB.prepare(`SELECT id,sender,subject,received_at,attachment_count,body_key,folder,is_read,starred,EXISTS(SELECT 1 FROM outbox o WHERE o.id=messages.id AND o.mailbox_id=messages.mailbox_id AND json_extract(o.letter,'$.html') IS NOT NULL) AS sent_html,(SELECT reason FROM mail_assessment WHERE message_id=messages.id) AS screening FROM messages
+    await env.DB.prepare(`SELECT (SELECT recipients FROM message_metadata WHERE message_id=messages.id) recipients,(SELECT cc FROM message_metadata WHERE message_id=messages.id) cc,id,sender,subject,received_at,attachment_count,body_key,folder,is_read,starred,EXISTS(SELECT 1 FROM outbox o WHERE o.id=messages.id AND o.mailbox_id=messages.mailbox_id AND json_extract(o.letter,'$.html') IS NOT NULL) AS sent_html,(SELECT reason FROM mail_assessment WHERE message_id=messages.id) AS screening FROM messages
     WHERE id=? AND mailbox_id IN (SELECT b.id ${mailboxAccess} AND b.id=?)`)
       .bind(id, human(p).id, mailbox)
       .first<{ id: string; body_key: string; folder: string; sent_html: number }>();

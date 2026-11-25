@@ -71,6 +71,9 @@ export async function feedbackJourney(page) {
   await page.getByLabel("Summary", { exact: true }).fill(report.summary);
   await page.getByRole("button", { name: "Review feedback" }).click();
   await page.getByRole("button", { name: "Edit feedback" }).click();
+  await page
+    .getByLabel("Reproduction details (optional)")
+    .fill("Open two inboxes and compare the same fictional receipt.");
   await page.getByRole("button", { name: "Review feedback" }).click();
   assert.equal(requests.length, 0);
   await page.getByRole("button", { name: "Send privately" }).click();
@@ -79,6 +82,10 @@ export async function feedbackJourney(page) {
   await page.getByRole("button", { name: "Retry send" }).click();
   await page.getByText(/Feedback sent\./).waitFor();
   assert.deepEqual(requests[0], requests[1]);
+  assert.equal(
+    requests[0].report.details,
+    "Open two inboxes and compare the same fictional receipt.",
+  );
   await page.getByRole("button", { name: "Check for reply" }).click();
   await page.getByText("Thanks for the suggestion.").waitFor();
   await page.getByRole("button", { name: "Remove receipt" }).click();

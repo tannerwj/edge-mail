@@ -21,7 +21,7 @@ export async function checkDomainImport({ page, origin, request, json, start, st
   await page.getByLabel("Reading layout").waitFor();
   await sectionNav.getByRole("link", { name: "Mailboxes & domains" }).click();
   await page.getByText("Import Cloudflare domains", { exact: true }).click();
-  await page.getByText("pnpm domains:sync --apply YOUR_WORKER", { exact: true }).waitFor();
+  await page.getByText("pnpm domains:sync --apply --host 127.0.0.1", { exact: true }).waitFor();
   const zones = [
     { id: "registered", name: "mail.test" },
     { id: "shipping", name: "shipping.test" },

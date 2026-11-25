@@ -1,7 +1,16 @@
 import { Mail, Inbox } from "lucide-react";
 import React from "react";
-export const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+export function formatDate(value: string) {
+  const time = new Date(value),
+    today = new Date();
+  if (time.toDateString() === today.toDateString())
+    return time.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return time.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: time.getFullYear() === today.getFullYear() ? undefined : "numeric",
+  });
+}
 export function Status({ error }: { error: Error | null }) {
   return <p role="status">{error?.message || "Loading…"}</p>;
 }

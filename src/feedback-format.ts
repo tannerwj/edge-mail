@@ -14,6 +14,7 @@ export const areas = [
 export const reportFormat = z.strictObject({
   kind: z.enum(kinds),
   summary: z.string().check(z.trim(), z.minLength(1), z.maxLength(200)),
+  details: z.optional(z.string().check(z.trim(), z.maxLength(2000))),
   tool_name: z.enum(areas),
   server_version: z.string().check(z.regex(/^\d{1,6}\.\d{1,6}\.\d{1,6}$/)),
 });

@@ -43,6 +43,8 @@ export const spaceSchema = z.object({
 const message = {
   id: z.string(),
   sender: z.string(),
+  recipients: z.optional(z.nullable(z.string())),
+  cc: z.optional(z.nullable(z.string())),
   subject: z.string(),
   received_at: z.string(),
   attachment_count: z.number(),

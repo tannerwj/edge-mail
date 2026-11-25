@@ -134,7 +134,7 @@ export function Sidebar({ space, session, box, view }: Props) {
           </nav>
           {box && (
             <>
-              <h2>Folders</h2>
+              <h2 title={box.address}>Folders · {box.display_name}</h2>
               <FolderLinks box={box} view={view} />
               <SearchBookmarks box={box.id} query={view.q} />
             </>

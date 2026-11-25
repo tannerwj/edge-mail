@@ -5,6 +5,7 @@ import { Problem, type Bindings, type Principal } from "../env";
 import { administrator, human } from "./access";
 
 const catalogSchema = z.object({
+  worker: z.optional(z.string().check(z.regex(/^[a-z0-9-]+$/))),
   updated: z.string(),
   zones: z.array(z.object({ id: z.string(), name: z.string() })),
 });
@@ -12,7 +13,7 @@ const catalogSchema = z.object({
 async function inventory(env: Bindings, user: Principal) {
   administrator(user);
   const file = await env.MAIL.get("instance/zone-catalog.json");
-  if (!file) return { version: "", updated: "", zones: [] };
+  if (!file) return { worker: env.INSTALL_WORKER, version: "", updated: "", zones: [] };
   const data = catalogSchema.parse(await file.json());
   return { ...data, version: file.etag };
 }

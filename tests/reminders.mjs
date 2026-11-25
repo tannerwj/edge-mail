@@ -6,8 +6,7 @@ export async function checkReminders({ origin, page, start, box, root, json, req
   const visible = async (folder) => (await list(folder)).messages.some((m) => m.thread_id === root);
   await start("box-editor@example.test");
   await page.goto(origin + "/mailboxes/" + box + "/inbox/messages/" + root);
-  await page.getByText("Message tools & details", { exact: true }).click();
-  await page.getByText("Conversation reminders", { exact: true }).click();
+  await page.getByText("Snooze or follow up", { exact: true }).click();
   await page
     .getByLabel("Reminder time")
     .fill(new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 16));

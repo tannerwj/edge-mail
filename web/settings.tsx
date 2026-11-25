@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { SettingMatches, settingMatches } from "./setting-matches";
+import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import {
   ChevronRight,
   MessageSquare,
@@ -30,7 +31,7 @@ import { Screening } from "./screening";
 import { AgentSettings } from "./agents";
 import { Rules } from "./rules";
 import { Offboarding } from "./offboard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, type Workspace } from "./api";
 
 import { DomainImport } from "./domain-import";
@@ -62,11 +63,13 @@ function MailboxSettings({ space }: Props) {
       <UnknownRecipients space={space} />
       <div className="forms">
         {admin && (
-          <Form
-            title="Add domain"
-            fields={[{ key: "name", label: "Domain name" }]}
-            submit={(d) => api("domains", d)}
-          />
+          <div id="manual-domain">
+            <Form
+              title="Add domain"
+              fields={[{ key: "name", label: "Domain name" }]}
+              submit={(d) => api("domains", d)}
+            />
+          </div>
         )}
         {!!space.domains.length && (
           <Form
@@ -250,11 +253,37 @@ function sections(space: Workspace, email: string) {
     },
   ].filter((s) => s.show);
 }
-export function Settings({ space, section, email }: { space: Workspace; email: string; section?: string }) {
+function useSettingFocus() {
+  const hash = useLocation({ select: (l) => l.hash });
+  useEffect(() => {
+    if (!hash) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(hash);
+      if (!target) return;
+      if (target instanceof HTMLDetailsElement) target.open = true;
+      const details = target.closest("details");
+      if (details) details.open = true;
+      const control = target.querySelector<HTMLElement>("input,select,textarea,summary");
+      control?.focus();
+      target.scrollIntoView({ block: "center" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
+}
+export function Settings({
+  space,
+  section,
+  email,
+}: {
+  space: Workspace;
+  email: string;
+  section?: string;
+}) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const pages = sections(space, email),
     current = pages.find((p) => p.id === section);
+  useSettingFocus();
   if (section)
     return (
       <section className="settings settings-detail">
@@ -309,6 +338,11 @@ export function Settings({ space, section, email }: { space: Workspace; email: s
     matches = pages.filter((p) =>
       (p.title + " " + p.summary + " " + p.keywords).toLowerCase().includes(needle),
     );
+  const controls = settingMatches(needle, space);
+  const library =
+    !!needle &&
+    ["contacts", "contact", "templates", "template", "address book"].includes(needle) &&
+    space.mailboxes.some((b) => b.can_edit);
   return (
     <section className="settings settings-home">
       <h1>Settings</h1>
@@ -322,6 +356,9 @@ export function Settings({ space, section, email }: { space: Workspace; email: s
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
+      {(controls.length > 0 || library) && (
+        <SettingMatches matches={controls} library={library} space={space} />
+      )}
       <nav className="settings-directory" aria-label="Settings categories">
         {matches.map((p) => (
           <Link key={p.id} to="/settings/$section" params={{ section: p.id }}>
@@ -336,7 +373,7 @@ export function Settings({ space, section, email }: { space: Workspace; email: s
           </Link>
         ))}
       </nav>
-      {!matches.length && (
+      {!matches.length && !controls.length && !library && (
         <p role="status">
           No settings match “{query}”.{" "}
           <button className="quiet" onClick={() => setQuery("")}>

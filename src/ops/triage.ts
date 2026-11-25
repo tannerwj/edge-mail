@@ -5,7 +5,7 @@ import { changed } from "../live";
 import { Problem, requireValue, type Bindings, type Principal } from "../env";
 import { human, writable } from "./access";
 
-function action(data: Record<string, unknown>) {
+export function triageAction(data: Record<string, unknown>) {
   const { field, value } = data;
   if (field === "label" || field === "unlabel") {
     const label = requireValue(value, 80);
@@ -53,7 +53,7 @@ export async function triage(
     SELECT m.id,m.mailbox_id FROM messages m JOIN json_each(?) input ON m.id=input.value
     WHERE m.mailbox_id IN (${writable}) ${credential ? "AND EXISTS(" + liveWrite + ")" : ""}
   )`;
-  const { sql, value } = action(data);
+  const { sql, value } = triageAction(data);
   // Both statements share a transaction. A missing or inaccessible ID prevents the whole change.
   const check = env.DB.prepare(
     scope + ` SELECT count(*) AS n, EXISTS(${writable}) AS allowed FROM eligible`,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "./api";
+import { fileMessages, refreshMail } from "./triage-notice";
 
 export function useSelection() {
   const [ids, setIds] = useState<string[]>([]);
@@ -22,11 +22,9 @@ export function useSelection() {
 }
 
 export function BulkActions({
-  box,
   selection,
   loaded,
 }: {
-  box: string;
   selection: ReturnType<typeof useSelection>;
   loaded: string[];
 }) {
@@ -34,15 +32,10 @@ export function BulkActions({
   const [label, setLabel] = useState("");
   const save = useMutation({
     mutationFn: (data: { field: string; value: string | boolean }) =>
-      api("mailboxes/" + box + "/triage", { ...data, ids: selection.ids }),
+      fileMessages(selection.ids, data.field, data.value),
     onSuccess: async () => {
       selection.close();
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["workspace"] }),
-        client.invalidateQueries({ queryKey: ["unified-inbox"] }),
-        client.invalidateQueries({ queryKey: ["inbox", box] }),
-        client.invalidateQueries({ queryKey: ["message", box] }),
-      ]);
+      await refreshMail(client);
     },
   });
   if (!selection.active)
@@ -53,7 +46,7 @@ export function BulkActions({
     );
   return (
     <fieldset className="bulk-actions" disabled={save.isPending}>
-      <legend>{selection.ids.length} messages selected</legend>
+      <legend>{selection.ids.length} messages selected · Limit 200</legend>
       <button
         type="button"
         className="quiet"
@@ -71,6 +64,12 @@ export function BulkActions({
           </button>
           <button onClick={() => save.mutate({ field: "is_read", value: true })}>
             Mark selected read
+          </button>
+          <button onClick={() => save.mutate({ field: "is_read", value: false })}>
+            Mark selected unread
+          </button>
+          <button onClick={() => save.mutate({ field: "folder", value: "trash" })}>
+            Move selected to Trash
           </button>
           <label>
             Label for selected messages

@@ -1,10 +1,11 @@
-import { RefreshCw } from "lucide-react";
+import { messagePerson } from "./recipient-header";
+import { RefreshCw, Paperclip } from "lucide-react";
 import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { api, inboxSchema, type Box, type Workspace } from "./api";
 import { destination, type MailView } from "./navigation";
-import { MailFilter } from "./triage";
+import { MailFilter } from "./mail-search";
 import { BulkActions, useSelection } from "./bulk-actions";
 import { Reader } from "./reader";
 import { ConversationList } from "./conversation-list";
@@ -14,6 +15,16 @@ import { useMailGestures } from "./gestures";
 import { MailCommands } from "./commands";
 import { EmptyReader, SenderAvatar, Status, formatDate } from "./mail-display";
 
+const emptyFolders: Record<string, string> = {
+  starred: "No starred messages. Star a message to keep it here.",
+  archive: "No archived messages. Messages you archive appear here.",
+  snoozed: "No snoozed conversations. Choose Snooze in a conversation to bring it back later.",
+  unread: "All caught up. No unread messages.",
+  sent: "No sent messages yet.",
+  spam: "No messages in Spam.",
+  trash: "Trash is empty.",
+  "follow-ups": "No follow-ups due.",
+};
 function listHeading(box: Box | undefined, view: MailView, scope: Box[]) {
   const unified = view.view === "unified";
   const title = unified
@@ -34,13 +45,16 @@ function listHeading(box: Box | undefined, view: MailView, scope: Box[]) {
 }
 function useConversations(box: Box | undefined, view: MailView, unified: boolean) {
   return useInfiniteQuery({
-    queryKey: unified ? ["unified-inbox", view.domain] : ["inbox", box?.id, view.q, view.folder],
+    queryKey: unified
+      ? ["unified-inbox", view.domain, view.q]
+      : ["inbox", box?.id, view.q, view.folder],
     initialPageParam: "",
     refetchInterval: 15000,
     queryFn: ({ pageParam }) =>
       api(
         unified
-          ? "inbox?" + new URLSearchParams({ domain: view.domain || "", before: pageParam })
+          ? "inbox?" +
+              new URLSearchParams({ domain: view.domain || "", before: pageParam, q: view.q || "" })
           : "mailboxes/" +
               box?.id +
               "/messages?group=thread&before=" +
@@ -65,26 +79,37 @@ function ConversationLink({
   const selected = view.message;
   const target = m.mailbox_id || box?.id;
   if (!target) return null;
+  const person = messagePerson(m);
+  const time = new Date(m.received_at);
   return (
     <Link
       {...destination({ ...view, box: target, message: m.id })}
       className={"item " + (selected === m.id ? "selected" : "")}
     >
-      <SenderAvatar sender={m.sender} />
+      <SenderAvatar sender={person} />
       <span className="message-text">
         <span className="row">
-          <strong>{m.sender || "Unknown sender"}</strong>
-          <time>{formatDate(m.received_at)}</time>
+          <strong>{person}</strong>
+          {mailbox && (
+            <small className="row-mailbox" title={mailbox}>
+              {mailbox}
+            </small>
+          )}
+          {m.attachment_count > 0 && (
+            <span role="img" aria-label={m.attachment_count + " attachments"}>
+              <Paperclip size={13} />
+            </span>
+          )}
+          <time dateTime={m.received_at} title={time.toLocaleString()}>
+            {formatDate(m.received_at)}
+          </time>
         </span>
         <b className={m.is_read ? "" : "unread"}>
           {m.starred ? "★ " : ""}
           {m.subject || "(No subject)"}
           {m.message_count > 1 ? " · " + m.message_count : ""}
         </b>
-        <span className="snippet">
-          {mailbox ? mailbox + " · " : ""}
-          {m.snippet}
-        </span>
+        <span className="snippet">{m.snippet}</span>
       </span>
     </Link>
   );
@@ -132,16 +157,19 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
             </button>
           </div>
         </header>
-        {!unified && box && (
+        {box && (
           <>
-            <MailFilter box={box} view={view} />
+            <MailFilter box={box} view={view} scope={unified ? title : undefined} />
             <div className="list-tools">
-              <MailAssistant box={box} />
-              {!!box.can_edit && (
+              {!unified && <MailAssistant box={box} />}
+              {(unified ? scope.some((b) => b.can_edit) : !!box.can_edit) && (
                 <BulkActions
-                  box={box.id}
                   selection={selection}
-                  loaded={messages.map((m) => m.id)}
+                  loaded={messages
+                    .filter(
+                      (m) => !unified || scope.some((b) => b.id === m.mailbox_id && b.can_edit),
+                    )
+                    .map((m) => m.id)}
                 />
               )}
             </div>
@@ -153,23 +181,28 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
           view.q && box ? (
             <div className="empty">
               <p>No messages match this search.</p>
-              <Link {...destination({ box: box.id })}>Clear search</Link>
+              <Link {...destination({ ...view, box: box.id, q: undefined, message: undefined })}>
+                Clear search
+              </Link>
             </div>
           ) : (
-            <p className="empty">No messages yet.</p>
+            <p className="empty">{emptyFolders[view.folder || ""] || "No messages yet."}</p>
           )
         ) : (
           <ConversationList rows={messages} selected={selected}>
             {(m) => (
               <div key={m.id} className="message-row">
-                {!unified && !!box?.can_edit && selection.active && (
-                  <input
-                    type="checkbox"
-                    aria-label={"Select message " + (m.subject || "(No subject)")}
-                    checked={selection.ids.includes(m.id)}
-                    onChange={() => selection.toggle(m.id)}
-                  />
-                )}
+                {(unified
+                  ? scope.some((b) => b.id === m.mailbox_id && b.can_edit)
+                  : !!box?.can_edit) &&
+                  selection.active && (
+                    <input
+                      type="checkbox"
+                      aria-label={"Select message " + (m.subject || "(No subject)")}
+                      checked={selection.ids.includes(m.id)}
+                      onChange={() => selection.toggle(m.id)}
+                    />
+                  )}
                 <ConversationLink
                   m={m}
                   box={box}
@@ -193,7 +226,7 @@ export function Inbox({ box, view, space }: { box?: Box; view: MailView; space: 
         {selected && box ? (
           <Reader box={box} id={selected} view={view} />
         ) : messages.length > 0 ? (
-          <EmptyReader search={!unified} />
+          <EmptyReader search={true} />
         ) : null}
       </section>
     </div>

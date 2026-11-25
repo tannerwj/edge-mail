@@ -127,7 +127,7 @@ function RuleForm({
 }) {
   const [feedback, setFeedback] = useState(""),
     [busy, setBusy] = useState(false),
-    [action, setAction] = useState("label");
+    [action, setAction] = useState(location.hash === "#vacation-reply" ? "auto_reply" : "label");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget,
@@ -324,7 +324,7 @@ export function Rules({ mailboxes }: { mailboxes: Box[] }) {
   const destinations = useDestinations(box, open && canForward);
   if (!mailboxes.length) return null;
   return (
-    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details id="vacation-reply" onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>Mail rules</summary>
       <label>
         Rules for mailbox

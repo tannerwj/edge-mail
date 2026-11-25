@@ -5,6 +5,7 @@ import { fileEntry } from "./compose-files";
 export const schema = z.object({
   id: z.string(),
   revision: z.number(),
+  parent: z.optional(z.nullable(z.string())),
   content: z.object({
     to: z.string(),
     cc: z.string(),

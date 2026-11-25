@@ -203,6 +203,7 @@ export default defineConfig(({ mode }) => {
         }),
       ],
       env: {
+        INSTALL_WORKER: bindings.text(name),
         OAUTH_KV: bindings.kv({ id: process.env.EDGE_OAUTH_KV || "0".repeat(32) }),
         ...assistantBinding(),
         LOADER: bindings.workerLoader(),

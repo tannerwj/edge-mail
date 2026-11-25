@@ -5,6 +5,17 @@ import { Form } from "./settings-form";
 import { api, type Workspace } from "./api";
 const result = z.object({
   domain: z.string(),
+  progress: z.optional(
+    z.array(
+      z.object({
+        address: z.string(),
+        route: z.nullable(z.string()),
+        inbound: z.nullable(z.string()),
+        outbound: z.nullable(z.string()),
+        captured: z.nullable(z.string()),
+      }),
+    ),
+  ),
   apex: z.optional(z.boolean()),
   worker: z.optional(z.string()),
   state: z.enum(["declines", "cutover", "cloudflare", "unused"]),
@@ -105,6 +116,7 @@ export function DomainSetup({
             </p>
           )}
           <p>{instructions[report.data.state]}</p>
+          <DomainProgress rows={report.data.progress || []} />
           {report.data.worker && ["cloudflare", "unused"].includes(report.data.state) && (
             <RecipientRoute
               key={id}
@@ -142,6 +154,59 @@ export function DomainSetup({
   );
 }
 
+const time = (v: string) => new Date(v).toLocaleString();
+function DomainProgress({ rows }: { rows: NonNullable<z.infer<typeof result>["progress"]> }) {
+  const [choice, setChoice] = useState("");
+  const row = rows.find((b) => b.address === choice) || rows[0];
+
+  return (
+    <section aria-label="Delivery setup progress">
+      <h3>Delivery checks</h3>
+      {rows.length > 1 && (
+        <label>
+          Check mailbox
+          <select value={row.address} onChange={(e) => setChoice(e.target.value)}>
+            {rows.map((b) => (
+              <option key={b.address}>{b.address}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {row && rows.length === 1 && <p>{row.address}</p>}
+      <ul className="setup-progress">
+        <li>
+          Domain added <strong>Complete</strong>
+        </li>
+        <li>
+          Receiving route{" "}
+          <strong>
+            {row?.route
+              ? "Verified " + time(row.route)
+              : row?.inbound
+                ? "Received mail " + time(row.inbound)
+                : "Awaiting verification"}
+          </strong>
+        </li>
+        <li>
+          Inbound mail{" "}
+          <strong>
+            {row?.inbound ? "Received " + time(row.inbound) : "Awaiting test message"}
+          </strong>
+        </li>
+        <li>
+          Outbound mail{" "}
+          <strong>
+            {row?.outbound
+              ? "Provider accepted " + time(row.outbound)
+              : row?.captured
+                ? "Captured locally " + time(row.captured)
+                : "Awaiting test send"}
+          </strong>
+        </li>
+      </ul>
+    </section>
+  );
+}
 function RecipientRoute({
   domain,
   worker,

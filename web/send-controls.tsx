@@ -1,3 +1,4 @@
+import { TimePresets } from "./time-presets";
 import { useState } from "react";
 import type { Box } from "./api";
 export function SendControls({
@@ -31,6 +32,7 @@ export function SendControls({
           <details className="send-options">
             <summary>Send later</summary>
             <div>
+              <TimePresets choose={setTime} />
               <label>
                 Send at (local time)
                 <input

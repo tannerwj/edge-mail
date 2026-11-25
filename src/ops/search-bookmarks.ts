@@ -1,23 +1,12 @@
 import { type Bindings, Problem, requireValue } from "../env";
 import { mailboxAccess, type User } from "./access";
 import { parseSearch } from "../search";
-import { folderList } from "./folder-list";
+import { inbox } from "./inbox";
 const permitted = "SELECT b.id " + mailboxAccess + " AND b.id=?";
 export async function unifiedInbox(env: Bindings, u: User, url: URL) {
-  const domain = url.searchParams.get("domain") || "",
-    before = url.searchParams.get("before") || "";
-  const [at, id] = before.split("~");
-  if (before && (!id || !at)) throw new Problem(400, "Invalid page cursor");
-  const rows = await folderList(env, u.id, { domain }, "inbox", at, id).all<{
-    id: string;
-    received_at: string;
-  }>();
-  const messages = rows.results.slice(0, 50),
-    last = messages.at(-1);
-  return {
-    messages,
-    next: rows.results.length > 50 && last ? last.received_at + "~" + last.id : null,
-  };
+  const params = new URLSearchParams(url.searchParams);
+  params.set("group", "thread");
+  return inbox(env, u, { domain: params.get("domain") || "" }, params);
 }
 export async function searchBookmarks(
   env: Bindings,

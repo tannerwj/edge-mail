@@ -11,6 +11,7 @@ export interface Bindings extends WorkerBindings {
       },
     ): Promise<unknown>;
   };
+  INSTALL_WORKER?: string;
   MAIL_ACCOUNT_ID?: string;
   ACCOUNT_ANALYTICS_TOKEN?: string;
   SUPPRESSION_API_TOKEN?: string;

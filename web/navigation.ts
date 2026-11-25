@@ -18,6 +18,12 @@ declare module "@tanstack/react-router" {
 }
 export const allMessageRoute = "/inboxes/$box/messages/$message";
 export const domainMessageRoute = "/domains/$domain/inbox/$box/messages/$message";
+export const combinedSearchRoutes = [
+  "/inboxes/search/$term",
+  "/inboxes/search/$term/$box/messages/$message",
+  "/domains/$domain/inbox/search/$term",
+  "/domains/$domain/inbox/search/$term/$box/messages/$message",
+] as const;
 export const folderRoute = "/mailboxes/$box/$folder";
 export const messageRoute = "/mailboxes/$box/$folder/messages/$message";
 export const searchRoute = "/mailboxes/$box/search/$term";
@@ -30,6 +36,15 @@ export function destination(view: MailView & { box: string }) {
   const search = {};
   if (draft) return { to: draftRoute, params: { box, draft }, search: {} };
   if (view.view === "unified") {
+    if (q) {
+      const params = { box, message, domain: view.domain, term: "~" + q };
+      const [all, allMessage, domain, domainMessage] = combinedSearchRoutes;
+      return {
+        to: view.domain ? (message ? domainMessage : domain) : message ? allMessage : all,
+        params,
+        search,
+      };
+    }
     if (view.domain)
       return message
         ? { to: domainMessageRoute, params: { domain: view.domain, box, message }, search }

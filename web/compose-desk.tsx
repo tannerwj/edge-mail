@@ -7,6 +7,8 @@ import { destination } from "./navigation";
 import { useComposeSession, type DraftRef, type DraftWindow, type Point } from "./compose-session";
 
 export type WindowActions = {
+  mailboxes: Box[];
+  transfer: (box: string, next: string) => void;
   mode: DraftWindow["layout"] | "minimized";
   wide: boolean;
   position?: Point;
@@ -59,6 +61,17 @@ export function ComposeDesk({
             box={box}
             id={id}
             controls={{
+              mailboxes: boxes.filter((b) => b.can_edit && b.send_from),
+              transfer: (target, next) => {
+                change(id, { box: target, id: next });
+                if (route?.id === id)
+                  void navigate({
+                    ...destination({ box: target, draft: next }),
+                    replace: true,
+                    state: history,
+                  });
+                void client.invalidateQueries({ queryKey: ["drafts"] });
+              },
               mode: desk.active === id ? draft.layout : "minimized",
               wide: draft.wide,
               position: draft.position,

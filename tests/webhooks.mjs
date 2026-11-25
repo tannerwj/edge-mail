@@ -78,7 +78,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
   assert.ok((await request("/api/notices")).some((n) => n.mailbox_id === box));
   const store = await worker.getR2Bucket("MAIL"),
     service = await worker.getWorker();
-  async function receive(subject) {
+  async function receive(subject, at) {
     const raw =
       "From: hello@fixture.test\r\nTo: push@example.test\r\nSubject: " +
       subject +
@@ -94,7 +94,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
       matched: "push@example.test",
       tag: null,
       auth: {},
-      at: new Date().toISOString(),
+      at,
     };
     await store.put(key, raw, { customMetadata: { receipt: JSON.stringify(receipt) } });
     const result = await service.queue("fixture-ingest", [
@@ -107,7 +107,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
     const result = await service.scheduled({ cron: "*/5 * * * *" });
     assert.equal(result.outcome, "ok");
   };
-  await receive("Paper receipt");
+  await receive("Paper receipt", "2026-11-20T12:01:00.000Z");
   await tick();
   assert.equal(receiver.calls.length, 1);
   const rotated = await request("/v1/webhook_rotate", { mailbox: box, id }, token);
@@ -115,7 +115,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
   await db.prepare("UPDATE webhook_jobs SET due=0 WHERE hook=? AND state='pending'").bind(id).run();
   await tick();
   assert.deepEqual(receiver.calls[1], receiver.calls[0]);
-  await receive("Replacement receipt");
+  await receive("Replacement receipt", "2026-11-20T12:02:00.000Z");
   await tick();
   assert.equal(receiver.calls[2].version, 2);
   const log = await request("/api/mailboxes/" + box + "/webhooks");
@@ -145,7 +145,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
     },
   });
   receiver.expected.set(held.id, "rule.matched");
-  await receive("Filing request");
+  await receive("Filing request", "2026-11-20T12:03:00.000Z");
   await tick();
   assert.equal(receiver.calls.length, 5);
   assert.deepEqual(
@@ -158,7 +158,7 @@ export async function exerciseHooks(worker, jwt, db, receiver, push) {
     .bind(id, held.id)
     .all();
   assert.deepEqual(ruleEvent.results, [{ state: "delivered" }]);
-  await receive("Last receipt");
+  await receive("Last receipt", "2026-11-20T12:04:00.000Z");
   await request("/api/grants/" + grant + "/revoke", {});
   await tick();
   assert.equal(receiver.calls.length, 5);

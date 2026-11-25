@@ -1,5 +1,5 @@
 import { Bold, Italic } from "lucide-react";
-import { getSchema, Node } from "@tiptap/core";
+import { Schema } from "@tiptap/pm/model";
 import { history, redo, undo } from "@tiptap/pm/history";
 import { EditorState, Plugin, TextSelection } from "@tiptap/pm/state";
 import { keymap } from "@tiptap/pm/keymap";
@@ -8,15 +8,13 @@ import { Decoration, DecorationSet, EditorView } from "@tiptap/pm/view";
 import { Component, createRef } from "react";
 import { textParts } from "../src/rich-text";
 
-const documentNode = Node.create({ name: "doc", topNode: true, content: "body" });
-const bodyNode = Node.create({
-  name: "body",
-  group: "block",
-  content: "text*",
-  code: true,
-  renderHTML: () => ["div", 0],
+const schema = new Schema({
+  nodes: {
+    doc: { content: "body" },
+    body: { group: "block", content: "text*", code: true, toDOM: () => ["div", 0] },
+    text: { group: "inline" },
+  },
 });
-const textNode = Node.create({ name: "text", group: "inline" });
 function wrap(view: EditorView, marker: string) {
   const { from, to } = view.state.selection;
   const selected = view.state.doc.textBetween(from, to) || "text";
@@ -28,7 +26,6 @@ function wrap(view: EditorView, marker: string) {
   view.focus();
   return true;
 }
-const schema = getSchema([documentNode, bodyNode, textNode]);
 const newline = (state: EditorState, dispatch?: EditorView["dispatch"]) => {
   dispatch?.(state.tr.insertText("\n"));
   return true;

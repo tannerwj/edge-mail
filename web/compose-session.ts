@@ -46,9 +46,13 @@ export function useComposeSession(user: string, route?: DraftRef) {
       // The desk still works in memory when browser storage is unavailable.
     }
   }, [key, desk]);
-  function change(id: string, values: Partial<Pick<DraftWindow, "layout" | "wide" | "position">>) {
+  function change(
+    id: string,
+    values: Partial<Pick<DraftWindow, "layout" | "wide" | "position" | "id" | "box">>,
+  ) {
     setDesk((current) => ({
       ...current,
+      active: current.active === id && values.id ? values.id : current.active,
       windows: current.windows.map((w) => (w.id === id ? { ...w, ...values } : w)),
     }));
   }

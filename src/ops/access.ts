@@ -2,9 +2,10 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import { ulid } from "ulid";
 import { type Bindings, type Identity, type Principal, Problem } from "../env";
 
-export const writable = `SELECT b.id FROM mailboxes b JOIN users u ON u.id=? AND u.disabled_at IS NULL WHERE b.id=? AND NOT EXISTS(SELECT 1 FROM person_boxes e WHERE e.box=b.id)
+export const writableMailboxes = `SELECT b.id FROM mailboxes b JOIN users u ON u.id=? AND u.disabled_at IS NULL WHERE NOT EXISTS(SELECT 1 FROM person_boxes e WHERE e.box=b.id)
   AND (u.role IN ('owner','admin') OR EXISTS (SELECT 1 FROM mailbox_members mm WHERE mm.mailbox_id=b.id AND mm.user_id=u.id AND mm.role IN ('owner','editor')))`;
 
+export const writable = writableMailboxes + " AND b.id=?";
 const digest = (v: string) => createHash("sha256").update(v).digest();
 export type User = { kind: "user"; id: string; role: "owner" | "admin" | "member" };
 export async function lookup(env: Bindings, who: Identity): Promise<User | null> {

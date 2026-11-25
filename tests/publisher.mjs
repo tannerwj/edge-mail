@@ -60,7 +60,9 @@ export async function exerciseList(worker, jwt, db, service) {
   assert.equal((await leave(host)).status, 403);
   // Model the Email Routing authentication boundary for the same original MIME after proving that an import is ineligible.
   await db
-    .prepare("UPDATE deliveries SET kind='primary',auth=? WHERE mailbox_id=? AND message_id=?")
+    .prepare(
+      "UPDATE deliveries SET kind='primary',received_at='2026-11-20T12:00:00.000Z',auth=? WHERE mailbox_id=? AND message_id=?",
+    )
     .bind(JSON.stringify({ dkim: "pass" }), box, id)
     .run();
   assert.equal((await details()).unsubscribeHost, host);

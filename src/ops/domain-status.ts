@@ -2,6 +2,12 @@ import { lookup } from "../dns";
 import * as z from "zod/mini";
 import { canManageDomain } from "./access";
 import { Problem, type Bindings, type Principal } from "../env";
+async function routeReceipt(env: Bindings, domain: string, kind: string) {
+  const stored = await env.MAIL.get("instance/routes/" + domain + "/" + kind + ".json");
+  return stored
+    ? z.object({ checked: z.string(), addresses: z.array(z.string()) }).parse(await stored.json())
+    : null;
+}
 function txt(r: string) {
   return r.replace(/"\s+"/g, "").replace(/^"|"$/g, "");
 }
@@ -37,9 +43,28 @@ export async function domainStatus(env: Bindings, user: Principal, id: string) {
         })
         .safeParse(await catalog.json())
     : null;
+  const [exact, apex, mail] = await Promise.all([
+    routeReceipt(env, domain, "exact"),
+    routeReceipt(env, domain, "apex"),
+    env.DB.prepare(`SELECT b.address,
+      (SELECT max(d.received_at) FROM deliveries d WHERE d.mailbox_id=b.id AND d.kind!='import') inbound,
+      (SELECT max(o.created_at) FROM outbox o WHERE o.mailbox_id=b.id AND o.state='sent' AND o.provider!='capture') outbound,
+      (SELECT max(o.created_at) FROM outbox o WHERE o.mailbox_id=b.id AND o.state='sent' AND o.provider='capture') captured
+      FROM mailboxes b WHERE b.domain_id=?`)
+      .bind(id)
+      .all(),
+  ]);
   return {
+    progress: mail.results.map((m) => ({
+      ...m,
+      route: exact?.addresses.includes(String(m.address))
+        ? exact.checked
+        : apex?.addresses.includes("*")
+          ? apex.checked
+          : null,
+    })),
     apex: installation?.success && !!installation.data.zones?.some((zone) => zone.name === domain),
-    worker: installation?.success ? installation.data.worker : undefined,
+    worker: (installation?.success && installation.data.worker) || env.INSTALL_WORKER,
     domain,
     state,
     mx,

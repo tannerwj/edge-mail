@@ -1877,3 +1877,98 @@ a.queue-row:hover {
   margin: 0;
   white-space: pre-wrap;
 }
+.row-mailbox {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40%;
+  margin-left: auto;
+}
+.recipient-details {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.recipient-details dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.65rem;
+}
+.recipient-details dd {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .reading-toolbar .actions fieldset > button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+.triage-notice {
+  position: fixed;
+  z-index: 20;
+  left: 1rem;
+  bottom: 1rem;
+  background: var(--canvas);
+  color: var(--text);
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  box-shadow: 0 2px 14px #0003;
+}
+.quick-filters {
+  margin: 0 1rem 0.45rem;
+  font-size: 0.83rem;
+}
+.quick-filters summary,
+.reader-reminders summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.quick-filters form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+}
+.quick-filters input {
+  max-width: 100%;
+}
+.reader-reminders {
+  margin: 0.35rem 1rem;
+  font-size: 0.85rem;
+}
+.reader-reminders summary svg {
+  vertical-align: middle;
+}
+.time-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.35rem 0;
+}
+.time-presets small {
+  display: block;
+}
+.feedback-details {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.setting-matches {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.setting-matches a {
+  display: block;
+}
+.setup-progress {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.setup-progress li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}

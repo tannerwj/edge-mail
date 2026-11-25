@@ -1,6 +1,7 @@
 import { Sidebar } from "./sidebar";
 import { Inbox } from "./inbox";
 import { Approvals } from "./approvals";
+import { TriageNotice } from "./triage-notice";
 import { DomainSetup } from "./domain-setup";
 import { Status } from "./mail-display";
 import { ChangeNotices } from "./notifications";
@@ -34,6 +35,7 @@ import {
   draftRoute,
   allMessageRoute,
   domainMessageRoute,
+  combinedSearchRoutes,
   searchRoute,
   searchMessageRoute,
   folderRoute,
@@ -72,6 +74,7 @@ function Desk({ session }: { session: Session }) {
   return (
     <>
       <MailWorkspace session={session} space={space} box={box} location={background} />
+      <TriageNotice />
       <ComposeDesk
         key={session.email}
         user={session.email}
@@ -121,7 +124,14 @@ function MailWorkspace({
 }) {
   return (
     <div className="app">
-      <Sidebar space={space} session={session} box={box} view={location} />
+      <Sidebar
+        space={space}
+        session={session}
+        box={
+          location.view === "unified" ? workspaceBox(space, { ...location, box: undefined }) : box
+        }
+        view={location}
+      />
       <main>
         <ChangeNotices />
         {location.view === "domain-setup" ? (
@@ -151,7 +161,12 @@ function MailWorkspace({
             <Approvals />
           </section>
         ) : location.view === "unified" && space.mailboxes.length > 0 ? (
-          <Inbox key={location.domain || "all"} space={space} box={box} view={location} />
+          <Inbox
+            key={JSON.stringify([location.domain, location.q])}
+            space={space}
+            box={box}
+            view={location}
+          />
         ) : location.view === "settings" ? (
           <React.Suspense fallback={<p role="status">Opening settings…</p>}>
             <Settings email={session.email} space={space} section={location.section} />
@@ -215,6 +230,7 @@ const routes = [
   draftRoute,
   allMessageRoute,
   domainMessageRoute,
+  ...combinedSearchRoutes,
 ].map((path) =>
   createRoute({
     getParentRoute: () => mail,

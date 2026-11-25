@@ -1,3 +1,5 @@
+import { Clock3 } from "lucide-react";
+import { TimePresets } from "./time-presets";
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type Box } from "./api";
@@ -11,6 +13,7 @@ type State = {
 };
 export function Reminders({ box, state }: { box: Box; state: State }) {
   const client = useQueryClient(),
+    [time, setTime] = useState(""),
     [kind, setKind] = useState("thread_snooze");
   const save = useMutation({
     mutationFn: (data: object) =>
@@ -19,12 +22,15 @@ export function Reminders({ box, state }: { box: Box; state: State }) {
       await Promise.all([
         client.invalidateQueries({ queryKey: ["message", box.id] }),
         client.invalidateQueries({ queryKey: ["inbox", box.id] }),
+        client.invalidateQueries({ queryKey: ["unified-inbox"] }),
       ]);
     },
   });
   return (
-    <details>
-      <summary>Conversation reminders</summary>
+    <details className="reader-reminders">
+      <summary>
+        <Clock3 size={16} /> {box.can_edit ? "Snooze or follow up" : "Conversation reminders"}
+      </summary>
       <p>{state.muted ? "Future replies go to Archive." : "Future replies appear in the inbox."}</p>
       {state.snoozed_until && (
         <p>
@@ -58,11 +64,11 @@ export function Reminders({ box, state }: { box: Box; state: State }) {
             onSubmit={(e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
-              const time = f.get("time");
-              if (typeof time !== "string") return;
+              const chosen = f.get("time");
+              if (typeof chosen !== "string") return;
               save.mutate({
                 action: kind,
-                at: new Date(time).valueOf(),
+                at: new Date(chosen).valueOf(),
                 if_no_reply: f.has("conditional"),
               });
             }}
@@ -74,9 +80,16 @@ export function Reminders({ box, state }: { box: Box; state: State }) {
                 <option value="thread_follow_up">Follow up</option>
               </select>
             </label>
+            <TimePresets choose={setTime} />
             <label>
               Reminder time
-              <input type="datetime-local" name="time" required />
+              <input
+                type="datetime-local"
+                name="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                required
+              />
             </label>
             {kind === "thread_follow_up" && (
               <label>

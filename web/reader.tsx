@@ -1,3 +1,5 @@
+import { MarkOnOpen } from "./mark-on-open";
+import { RecipientHeader } from "./recipient-header";
 import { ArrowLeft, ChevronDown, Printer, Info } from "lucide-react";
 import { RuleExplanation } from "./rule-explanation";
 import { LeaveList } from "./leave-list";
@@ -12,7 +14,7 @@ import { Actions } from "./triage";
 import { Reminders } from "./reminders";
 import { FormattedBody } from "./formatted";
 import { Attachments } from "./attachments";
-import { SenderAvatar, Status, formatDate } from "./mail-display";
+import { Status, formatDate } from "./mail-display";
 export function Reader({ box, id, view }: { box: Box; id: string; view: MailView }) {
   const q = useQuery({
     queryKey: ["message", box.id, id],
@@ -37,19 +39,15 @@ export function Reader({ box, id, view }: { box: Box; id: string; view: MailView
                 : "Inbox"}
         </Link>
         {!box.can_edit && <small>Read-only mailbox</small>}
-        <Actions key={"actions:" + id} box={box} message={m} />
+        {!!box.can_edit && <MarkOnOpen key={id} id={id} box={box.id} unread={!m.is_read} />}
+        <Actions view={view} key={"actions:" + id} box={box} message={m} />
       </div>
+      {m.thread && <Reminders key={m.thread.thread_id} box={box} state={m.thread} />}
       <div className="letter">
         <h1>{m.subject || "(No subject)"}</h1>
         {m.protection === "signed" && <p>Signed (not verified)</p>}
         {m.protection === "encrypted" && <p>Encrypted, not supported</p>}
-        <div className="byline">
-          <SenderAvatar sender={m.sender} />
-          <div>
-            <strong>{m.sender || "Unknown sender"}</strong>
-            <small>{new Date(m.received_at).toLocaleString()}</small>
-          </div>
-        </div>
+        <RecipientHeader m={m} />
         {m.conversation.length > 1 && (
           <details className="conversation">
             <summary>Conversation · {m.conversation.length} messages</summary>
@@ -125,7 +123,7 @@ function MessageTools({ box, m }: { box: Box; m: ReturnType<typeof detailSchema.
         <Info size={15} /> Message tools &amp; details <ChevronDown size={14} />
       </summary>
       <MailAssistant key={"assist:" + id} box={box} id={id} />
-      {m.thread && <Reminders key={m.thread.thread_id} box={box} state={m.thread} />}
+
       <button className="quiet print-button" onClick={() => window.print()}>
         <Printer size={15} /> Print message
       </button>

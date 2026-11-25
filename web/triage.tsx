@@ -1,64 +1,11 @@
-import { Archive, Search, Star, Mail, MailOpen, Folder } from "lucide-react";
-import { parseSearch } from "../src/search";
+import { Archive, Star, Mail, MailOpen, Folder } from "lucide-react";
+import { fileMessages, refreshMail } from "./triage-notice";
 import { EraseMessage } from "./erasure";
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { api, type Box } from "./api";
 import { destination, type MailView } from "./navigation";
-function FilterChips({ box, q }: { box: string; q: string }) {
-  const tokens: string[] = [];
-  try {
-    parseSearch(q, 0, tokens);
-  } catch {
-    return null;
-  }
-  return (
-    <nav className="search-chips" aria-label="Active search filters">
-      {[...new Set(tokens)].map((t) => (
-        <Link
-          key={t}
-          aria-label={"Remove filter " + t}
-          {...destination({ box, q: tokens.filter((v) => v !== t).join(" ") || undefined })}
-        >
-          {t} ×
-        </Link>
-      ))}
-    </nav>
-  );
-}
-export function MailFilter({ box, view }: { box: Box; view: MailView }) {
-  const navigate = useNavigate();
-  return (
-    <>
-      <form
-        className="mailsearch"
-        role="search"
-        key={view.q}
-        onSubmit={(e) => {
-          e.preventDefault();
-          const value = new FormData(e.currentTarget).get("q");
-          const q = typeof value === "string" ? value.trim() : "";
-          void navigate(destination({ box: box.id, q: q || undefined }));
-        }}
-      >
-        <input
-          data-shortcut="/"
-          type="search"
-          aria-label="Search mailbox"
-          name="q"
-          maxLength={1024}
-          placeholder="Search mailbox"
-          defaultValue={view.q}
-        />
-        <button aria-label="Search" title="Search">
-          <Search size={16} />
-        </button>
-      </form>
-      {view.q && <FilterChips box={box.id} q={view.q} />}
-    </>
-  );
-}
 type Detail = { id: string; is_read: number; starred: number; folder: string; labels: string[] };
 function TriageButtons({
   message,
@@ -100,20 +47,29 @@ function TriageButtons({
     </>
   );
 }
-export function Actions({ box, message }: { box: Box; message: Detail }) {
-  const client = useQueryClient();
+export function Actions({ box, message, view }: { box: Box; message: Detail; view: MailView }) {
+  const client = useQueryClient(),
+    navigate = useNavigate();
+  const archive = useMutation({
+    mutationFn: () => fileMessages([message.id], "folder", "archive"),
+    onSuccess: async () => {
+      await refreshMail(client);
+      await navigate(destination({ ...view, box: box.id, message: undefined }));
+      requestAnimationFrame(() => {
+        (
+          document.querySelector<HTMLElement>(".conversation-scroll .item") ||
+          document.querySelector<HTMLElement>('[data-shortcut="/"]')
+        )?.focus();
+      });
+    },
+  });
   const save = useMutation({
     mutationFn: (data: { field: string; value: boolean | string }) =>
       data.field === "feedback"
         ? api("mailboxes/" + box.id + "/screening/" + message.id, { spam: data.value })
         : api("mailboxes/" + box.id + "/messages/" + message.id, data),
     onSuccess: async () => {
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["workspace"] }),
-        client.invalidateQueries({ queryKey: ["inbox", box.id] }),
-        client.invalidateQueries({ queryKey: ["unified-inbox"] }),
-        client.invalidateQueries({ queryKey: ["message", box.id, message.id] }),
-      ]);
+      await refreshMail(client);
     },
   });
   const [label, setLabel] = useState("");
@@ -121,9 +77,14 @@ export function Actions({ box, message }: { box: Box; message: Detail }) {
   return (
     <div className="actions">
       {!!box.can_edit && (
-        <fieldset disabled={save.isPending}>
+        <fieldset disabled={save.isPending || archive.isPending}>
           <legend>Organize message</legend>
-          <TriageButtons message={message} change={change} />
+          <TriageButtons
+            message={message}
+            change={(field, value) =>
+              field === "folder" ? archive.mutate() : change(field, value)
+            }
+          />
           <details className="organize-more">
             <summary>
               <Folder size={16} /> Move or label
@@ -198,6 +159,7 @@ export function Actions({ box, message }: { box: Box; message: Detail }) {
           </span>
         ),
       )}
+      {archive.error && <p role="alert">{archive.error.message}</p>}
       {save.error && <p role="alert">{save.error.message}</p>}
     </div>
   );
@@ -208,7 +170,7 @@ export function Appearance() {
   const [color, setColor] = useState(document.documentElement.dataset.color || "system");
   return (
     <>
-      <label className="appearance">
+      <label className="appearance" id="keyboard-shortcuts">
         <input
           type="checkbox"
           defaultChecked={localStorage.getItem("edge-mail-shortcuts") !== "off"}
@@ -218,7 +180,18 @@ export function Appearance() {
         />{" "}
         Single-key mailbox shortcuts
       </label>
-      <label className="appearance">
+      <label className="appearance" id="read-on-open">
+        <input
+          type="checkbox"
+          defaultChecked={localStorage.getItem("edge-mail-mark-on-open") === "on"}
+          onChange={(e) =>
+            localStorage.setItem("edge-mail-mark-on-open", e.target.checked ? "on" : "off")
+          }
+        />
+        Mark read when opened on this device{" "}
+        <small>Updates the shared unread count in mailboxes you can edit.</small>
+      </label>
+      <label className="appearance" id="color-scheme">
         Color scheme
         <select
           value={color}
@@ -234,7 +207,7 @@ export function Appearance() {
           <option value="dark">Dark</option>
         </select>
       </label>
-      <label className="appearance">
+      <label id="reading-layout" className="appearance">
         Reading layout
         <select
           value={theme}

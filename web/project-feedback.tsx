@@ -53,17 +53,30 @@ function Review({ report }: { report: Report }) {
         <dd>{report.server_version}</dd>
         <dt>Summary</dt>
         <dd>{report.summary}</dd>
+        {report.details && (
+          <>
+            <dt>Reproduction details</dt>
+            <dd className="feedback-details">{report.details}</dd>
+          </>
+        )}
       </dl>
     </section>
   );
 }
 
 function FeedbackForm({ onSend, busy }: { onSend: (report: Report) => void; busy: boolean }) {
+  const [details, setDetails] = useState("");
   const [summary, setSummary] = useState("");
   const [kind, setKind] = useState<Report["kind"]>("bug");
   const [area, setArea] = useState<Report["tool_name"]>("");
   const [preview, setPreview] = useState(false);
-  const report = { kind, tool_name: area, summary: summary.trim(), server_version: version };
+  const report = {
+    kind,
+    tool_name: area,
+    summary: summary.trim(),
+    ...(details.trim() ? { details: details.trim() } : {}),
+    server_version: version,
+  };
   return (
     <form
       onSubmit={(e) => {
@@ -72,6 +85,7 @@ function FeedbackForm({ onSend, busy }: { onSend: (report: Report) => void; busy
           onSend(report);
           setPreview(false);
           setSummary("");
+          setDetails("");
         } else setPreview(true);
       }}
     >
@@ -113,8 +127,20 @@ function FeedbackForm({ onSend, busy }: { onSend: (report: Report) => void; busy
               aria-describedby="feedback-hint"
             />
           </label>
+          <label>
+            Reproduction details (optional)
+            <textarea
+              rows={4}
+              maxLength={2000}
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              aria-describedby="feedback-hint"
+              placeholder="Steps to repeat, what happened, and what you expected"
+            />
+          </label>
           <small id="feedback-hint">
-            Leave out email addresses, message contents and secrets. {summary.length}/200
+            Leave out email addresses, message contents and secrets. Summary {summary.length}/200 ·
+            Details {details.length}/2000
           </small>
         </>
       )}

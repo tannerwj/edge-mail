@@ -1,5 +1,5 @@
 import { projectFeedback } from "./project-feedback";
-import { discardAction, undoSubmission } from "./ops/compose-undo";
+import { outboxAction } from "./ops/outbox-action";
 import { transportPolicy } from "./transport-policy";
 import { standardMailboxes } from "./ops/standard-mailboxes";
 import { notificationTargets } from "./ops/rule-notifications";
@@ -50,8 +50,10 @@ import { identity } from "./auth";
 import { type Bindings, Problem } from "./env";
 import { bootstrap, lookup, setupOpen, type User } from "./ops/access";
 import { addDomain, addMailbox, addAlias, addUser, grant, grantDomain } from "./ops/mailboxes";
-import { outbox, submitDraft, cancelSend } from "./ops/outbox";
-import { drafts, saveDraft } from "./ops/drafts";
+import { outbox } from "./ops/outbox";
+import { workspaceTriage } from "./ops/workspace-triage";
+import { writeMailboxDraft } from "./ops/write-draft";
+import { drafts } from "./ops/drafts";
 import { triage } from "./ops/triage";
 import { inbox, readMessage } from "./ops/inbox";
 
@@ -148,13 +150,18 @@ async function api(req: Request, env: Bindings, user: User, url: URL) {
   if (extra) throw new Problem(404, "Unknown operation");
   if (req.method === "GET") return readApi(env, user, url);
   if (req.method === "POST") {
-    if (area === "mailboxes" && box && action === "drafts") {
-      const data = await input(req, 600000);
-      if (id && (data.action === "discard" || data.action === "restore"))
-        return discardAction(env, user, box, id, data);
-      return saveDraft(env, user, box, id, data);
-    }
-    const data = await input(req, area === "mailboxes" && action === "library" ? 48000 : 8192);
+    if (area === "mailboxes" && box && action === "drafts")
+      return writeMailboxDraft(env, user, box, id, await input(req, 600000));
+    if (url.pathname === "/api/inbox/triage")
+      return workspaceTriage(env, user, await input(req, 32768));
+    const data = await input(
+      req,
+      area === "mailboxes" && action === "library"
+        ? 48000
+        : area === "project-feedback"
+          ? 16384
+          : 8192,
+    );
     if (area === "mailboxes" && box && id && action === "formatted")
       return formatted(env, user.id, box, id, url.origin, data.images);
     if (area === "mailboxes" && box && id && action === "outbox")
@@ -162,18 +169,6 @@ async function api(req: Request, env: Bindings, user: User, url: URL) {
     return mutate(env, user, url, data);
   }
   throw new Problem(404, "Unknown operation");
-}
-function outboxAction(
-  env: Bindings,
-  user: User,
-  box: string,
-  id: string,
-  data: Record<string, unknown>,
-) {
-  if (data.action === "undo") return undoSubmission(env, user, box, id);
-  if (data.action === "cancel") return cancelSend(env, user, box, id);
-  if (data.action === "send") return submitDraft(env, user, box, id, data);
-  throw new Problem(400, "Invalid outbox action");
 }
 function mailboxWrite(
   env: Bindings,

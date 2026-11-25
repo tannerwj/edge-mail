@@ -2,11 +2,24 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { activeBindings, api, cf } from "./cloud-cli.mjs";
+import { activeBindings, api, cf, pages } from "./cloud-cli.mjs";
 
-const [mode, worker, ...extra] = process.argv.slice(2);
+const [mode, requested, ...extra] = process.argv.slice(2);
+function resolveHost(host) {
+  assert.ok(/^[a-z0-9.-]+$/.test(host || ""), "Supply the installed app hostname");
+  const workers = pages(["workers", "list"]);
+  for (const item of workers) {
+    if (api("workers", "get", item.name).references?.domains?.some((d) => d.hostname === host))
+      return item.name;
+  }
+  throw new Error("No Worker in this account owns " + host);
+}
+const worker =
+  requested === "--host" && extra.length === 1 ? resolveHost(extra.shift()) : requested;
 assert.ok(
-  ["--check", "--apply"].includes(mode) && !extra.length && /^[a-z0-9-]+$/.test(worker || ""),
+  ["--check", "--apply"].includes(mode) &&
+    !extra.length &&
+    /^[a-z0-9][a-z0-9-]*$/.test(worker || ""),
   "Use pnpm domains:sync --check or --apply, followed by the installed Worker name",
 );
 const identity = api("auth", "whoami");

@@ -1,3 +1,4 @@
+import { CatalogSetup } from "./catalog-setup";
 import { Link } from "@tanstack/react-router";
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { api } from "./api";
 
 const catalog = z.object({
   version: z.string(),
+  worker: z.optional(z.string()),
   updated: z.string(),
   zones: z.array(
     z.object({
@@ -51,15 +53,7 @@ function DomainPicker() {
   if (!query.data)
     return <p role="status">{query.error?.message || "Loading Cloudflare domains…"}</p>;
   if (!query.data.version)
-    return (
-      <p>
-        In your installation checkout, run <code>pnpm domains:sync --apply YOUR_WORKER</code> using
-        the Worker name you chose when deploying. Then refresh this list.
-        <button className="quiet" onClick={() => void query.refetch()}>
-          Refresh list
-        </button>
-      </p>
-    );
+    return <CatalogSetup worker={query.data.worker} refresh={() => void query.refetch()} />;
   const shown = query.data.zones.filter((zone) => zone.name.includes(filter.trim().toLowerCase()));
   return (
     <>

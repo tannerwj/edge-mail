@@ -227,6 +227,15 @@ try {
   assert.deepEqual(await dnsResponse.json(), {
     apex: false,
     worker: "mail-fixture",
+    progress: [
+      {
+        address: "push@example.test",
+        inbound: "2026-11-20T12:04:00.000Z",
+        outbound: null,
+        captured: null,
+        route: null,
+      },
+    ],
     domain: "example.test",
     state: "cutover",
     mx: ["10 before.example.test."],

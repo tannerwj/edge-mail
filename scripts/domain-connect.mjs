@@ -1,3 +1,4 @@
+import { recordRoutes } from "./route-status.mjs";
 import { apexRoute } from "./domain-catch-all.mjs";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -45,6 +46,7 @@ assert.ok(
   bindings.some((b) => b.type === "r2_bucket" && b.name === "MAIL"),
   "Select the installed Edge Mail Worker",
 );
+const bucket = bindings.find((b) => b.type === "r2_bucket" && b.name === "MAIL").bucket_name;
 const db = bindings.find((b) => b.type === "d1" && b.name === "DB").database_id;
 const sql =
   "SELECT a.canonical FROM (SELECT canonical,mailbox_id FROM addresses UNION ALL SELECT canonical,mailbox_id FROM temporary_addresses WHERE (?4 OR (disabled=0 AND (expires IS NULL OR expires>unixepoch()*1000)))) a JOIN mailboxes b ON b.id=a.mailbox_id JOIN domains d ON d.id=b.domain_id WHERE d.name=?1 AND (?2 IS NULL OR a.canonical=?3) ORDER BY a.canonical LIMIT 201";
@@ -158,6 +160,7 @@ if (values["catch-all"]) {
     disconnect: !!values.disconnect,
     apply: !!values.apply,
   });
+  if (values.apply) recordRoutes(bucket, domain, "apex", values.disconnect ? [] : ["*"]);
   process.exit(0);
 }
 const plan = addresses.map((a) => route(a, before)).filter(Boolean);
@@ -197,5 +200,19 @@ if (values.apply) {
   const after = rules();
   for (const address of addresses)
     assert.equal(route(address, after), null, "Routing did not converge for " + address);
+  recordRoutes(
+    bucket,
+    domain,
+    "exact",
+    after
+      .filter(compatible)
+      .flatMap((r) =>
+        r.matchers
+          .filter(
+            (m) => m.type === "literal" && m.field === "to" && m.value?.endsWith("@" + domain),
+          )
+          .map((m) => m.value),
+      ),
+  );
   console.log("Verified exact routing for " + addresses.length + " configured addresses.");
 }

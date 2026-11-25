@@ -91,7 +91,7 @@ export function Signatures({ space }: { space: Workspace }) {
     identity = q.data?.find((i) => i.from === from) ?? q.data?.[0];
   if (!boxes.length) return null;
   return (
-    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details id="sending-signatures" onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>Sending identities and signatures</summary>
       <label>
         Sending mailbox
